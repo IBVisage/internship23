@@ -1,5 +1,5 @@
 #Testing python
-int main():
-  print("Hello")
+def main():
+    print("Hello")
 
 main()
