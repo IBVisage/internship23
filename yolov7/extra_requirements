@@ -1,0 +1,6 @@
+yolov7.pt needs to be downloaded from https://github.com/WongKinYiu/yolov7/tree/main
+
+This is compatible with Torch 1.0.0 version and that one should be installed
+
+and file traced_model.pt
+

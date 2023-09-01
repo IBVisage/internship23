@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["--weights", "yolov7.pt",
+                    "--conf", "0.25",
+                    "--img-size", "640",
+                    "--source", "inference/images/test_image2.jpg"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
