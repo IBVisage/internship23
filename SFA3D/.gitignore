@@ -4,3 +4,5 @@ dataset/kitti/testing/*
 
 !dataset/kitti/training/.gitkeep
 !dataset/kitti/testing/.gitkeep
+
+/**/__pycache__
