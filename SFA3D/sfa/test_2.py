@@ -20,7 +20,6 @@ from easydict import EasyDict as edict
 import cv2
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 
 src_dir = os.path.dirname(os.path.realpath(__file__))
 while not src_dir.endswith("sfa"):
@@ -126,7 +125,6 @@ if __name__ == '__main__':
     model.eval()
 
     test_dataloader = create_test_dataloader(configs)
-
     with torch.no_grad():
         for batch_idx, batch_data in enumerate(test_dataloader):
             metadatas, bev_maps, img_rgbs = batch_data
@@ -157,15 +155,11 @@ if __name__ == '__main__':
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
             calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
             kitti_dets = convert_det_to_real_values(detections)
-            
             if len(kitti_dets) > 0:
                 kitti_dets[:, 1:] = lidar_to_camera_box(kitti_dets[:, 1:], calib.V2C, calib.R0, calib.P2)
                 img_bgr = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
-            
-
 
             out_img = merge_rgb_to_bev(img_bgr, bev_map, output_width=configs.output_width)
-
 
             print('\tDone testing the {}th sample, time: {:.1f}ms, speed {:.2f}FPS'.format(batch_idx, (t2 - t1) * 1000,
                                                                                            1 / (t2 - t1)))
@@ -189,9 +183,6 @@ if __name__ == '__main__':
             print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
             if cv2.waitKey(0) & 0xFF == 27:
                 break
-
-
-
     if out_cap:
         out_cap.release()
     cv2.destroyAllWindows()

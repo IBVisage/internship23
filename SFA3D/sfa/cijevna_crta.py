@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
             if len(kitti_dets) > 0:
                 kitti_dets[:, 1:] = lidar_to_camera_box(kitti_dets[:, 1:], calib.V2C, calib.R0, calib.P2)
-                img_bgr = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
+                img_bgr, corners_out = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
 
             out_img = merge_rgb_to_bev(img_bgr, bev_map, output_width=configs.output_width)
 

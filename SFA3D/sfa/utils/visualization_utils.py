@@ -102,6 +102,8 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
 
     '''
 
+    print(corners)
+
     face_idx = [[0, 1, 5, 4],
                 [1, 2, 6, 5],
                 [2, 3, 7, 6],
@@ -117,7 +119,7 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
             cv2.line(image, (corners[f[1], 0], corners[f[1], 1]),
                      (corners[f[3], 0], corners[f[3], 1]), color, 1, lineType=cv2.LINE_AA)
 
-    return image
+    return image, corners
 
 
 def show_rgb_image_with_boxes(img, labels, calib):
@@ -129,9 +131,9 @@ def show_rgb_image_with_boxes(img, labels, calib):
             continue
         corners_3d = compute_box_3d(dim, location, ry)
         corners_2d = project_to_image(corners_3d, calib.P2)
-        img = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
+        img, corners_out = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
 
-    return img
+    return img, corners_out
 
 
 def merge_rgb_to_bev(img_rgb, img_bev, output_width):

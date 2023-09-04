@@ -31,10 +31,6 @@ import config.kitti_config as cnf
 
 
 class KittiDataset(Dataset):
-    #dataset_dir
-    #input_size
-    #hm_size
-    #
     def __init__(self, configs, mode='train', lidar_aug=None, hflip_prob=None, num_samples=None):
         self.dataset_dir = configs.dataset_dir
         self.input_size = configs.input_size
@@ -121,7 +117,6 @@ class KittiDataset(Dataset):
 
     def get_image(self, idx):
         img_path = os.path.join(self.image_dir, '{:06d}.png'.format(idx))
-        print(img_path)
         img = cv2.cvtColor(cv2.imread(img_path), cv2.COLOR_BGR2RGB)
 
         return img_path, img
