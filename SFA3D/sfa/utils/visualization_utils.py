@@ -102,8 +102,6 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
 
     '''
 
-    print(corners)
-
     face_idx = [[0, 1, 5, 4],
                 [1, 2, 6, 5],
                 [2, 3, 7, 6],
@@ -123,6 +121,7 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
 
 
 def show_rgb_image_with_boxes(img, labels, calib):
+    corners_2d_list = []
     for box_idx, label in enumerate(labels):
         cls_id, location, dim, ry = label[0], label[1:4], label[4:7], label[7]
         if location[2] < 2.0:  # The object is too close to the camera, ignore it during visualization
@@ -131,9 +130,11 @@ def show_rgb_image_with_boxes(img, labels, calib):
             continue
         corners_3d = compute_box_3d(dim, location, ry)
         corners_2d = project_to_image(corners_3d, calib.P2)
-        img, corners_out = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
 
-    return img, corners_out
+        img, corners_out = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
+        corners_2d_list.append(corners_2d)
+
+    return img, corners_2d_list
 
 
 def merge_rgb_to_bev(img_rgb, img_bev, output_width):

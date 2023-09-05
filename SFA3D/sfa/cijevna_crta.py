@@ -20,6 +20,7 @@ from easydict import EasyDict as edict
 import cv2
 import torch
 import numpy as np
+import os
 
 src_dir = os.path.dirname(os.path.realpath(__file__))
 while not src_dir.endswith("sfa"):
@@ -120,8 +121,9 @@ if __name__ == '__main__':
     configs.device = torch.device('cpu' if configs.no_cuda else 'cuda:{}'.format(configs.gpu_idx))
     model = model.to(device=configs.device)
 
+    cons = 0
+    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
     out_cap = None
-
     model.eval()
 
     test_dataloader = create_test_dataloader(configs)
@@ -153,15 +155,48 @@ if __name__ == '__main__':
             img_rgb = img_rgbs[0].numpy()
             img_rgb = cv2.resize(img_rgb, (img_rgb.shape[1], img_rgb.shape[0]))
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
-            calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
+            # calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
+            calib = Calibration("../dataset/kitti/testing/calib/00" + video_num + ".txt")
+            print(img_path.replace(".png", ".txt").replace("image_2", "calib"))
             kitti_dets = convert_det_to_real_values(detections)
-            print(kitti_dets)
+            kitti_dets_copius = np.copy(kitti_dets)
 
             if len(kitti_dets) > 0:
                 kitti_dets[:, 1:] = lidar_to_camera_box(kitti_dets[:, 1:], calib.V2C, calib.R0, calib.P2)
                 img_bgr, corners_out = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
 
             out_img = merge_rgb_to_bev(img_bgr, bev_map, output_width=configs.output_width)
+
+            " This part is mine below. "
+
+            # Create a folder for outputs_video if it doesn't exist
+            output_folder = "outputs_video"
+            if not os.path.exists("outputs/" + output_folder):
+                os.makedirs("outputs/" + output_folder)
+
+            formatted_cons = f"{cons:06d}"
+            # Define file name for the combined data
+            combined_filename = os.path.join("outputs/" + output_folder, "out_" + formatted_cons + ".txt")
+
+            print(kitti_dets_copius)
+            print(corners_out)
+
+            # Save kitti_dets_copius to a text file
+            with open(combined_filename, "w") as file:
+                np.savetxt(file, kitti_dets_copius, fmt='%.8f', delimiter='\t')
+                file.write("\n")  # Add a blank line
+
+                # Loop through corners_2d_list and save each set as a separate 2D array
+                for i, corners_2d in enumerate(corners_out):
+                    set_filename = f"corners_2d_set_{i}.txt"
+                    np.savetxt(file, corners_2d, fmt='%d', delimiter='\t')
+                    file.write("\n")  # Add a blank line between sets
+
+            print(f'Data saved successfully in {combined_filename}.')
+
+            cons = cons + 1
+
+            " This part is mine above. "
 
             print('\tDone testing the {}th sample, time: {:.1f}ms, speed {:.2f}FPS'.format(batch_idx, (t2 - t1) * 1000,
                                                                                            1 / (t2 - t1)))
@@ -183,8 +218,8 @@ if __name__ == '__main__':
 
             cv2.imshow('test-img', out_img)
             print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
-            if cv2.waitKey(0) & 0xFF == 27:
-                break
+            if cv2.waitKey(0) & 0xFF == 27: " Ova linija se odkomentira ako zelim slike isto plotat i jednu po jednu obradjivat. "
+                # break
     if out_cap:
         out_cap.release()
     cv2.destroyAllWindows()
