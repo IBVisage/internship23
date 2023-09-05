@@ -102,6 +102,8 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
 
     '''
 
+    # print(corners)
+
     face_idx = [[0, 1, 5, 4],
                 [1, 2, 6, 5],
                 [2, 3, 7, 6],
@@ -117,7 +119,7 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
             cv2.line(image, (corners[f[1], 0], corners[f[1], 1]),
                      (corners[f[3], 0], corners[f[3], 1]), color, 1, lineType=cv2.LINE_AA)
 
-    return image, corners
+    return image
 
 
 def show_rgb_image_with_boxes(img, labels, calib):
@@ -131,8 +133,13 @@ def show_rgb_image_with_boxes(img, labels, calib):
         corners_3d = compute_box_3d(dim, location, ry)
         corners_2d = project_to_image(corners_3d, calib.P2)
 
-        img, corners_out = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
+        img = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
         corners_2d_list.append(corners_2d)
+
+    # print("\n Idu corners_2d tocke: \n")
+    # print(corners_2d_list)
+    # print("\n Idu labele nakon lidar_to_camera_box poziva na kitti(data): \n")
+    # print(labels)
 
     return img, corners_2d_list
 

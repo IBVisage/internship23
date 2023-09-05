@@ -158,6 +158,7 @@ if __name__ == '__main__':
             # calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
             calib = Calibration("../dataset/kitti/testing/calib/00" + video_num + ".txt")
             print(img_path.replace(".png", ".txt").replace("image_2", "calib"))
+            print(detections)
             kitti_dets = convert_det_to_real_values(detections)
             kitti_dets_copius = np.copy(kitti_dets)
 
