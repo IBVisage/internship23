@@ -1,7 +1,7 @@
 SFA3D_env/
 dataset/kitti/training/*
 dataset/kitti/testing/*
-sfa/outputs/
+
 
 !dataset/kitti/training/.gitkeep
 !dataset/kitti/testing/.gitkeep
