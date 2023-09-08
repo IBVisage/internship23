@@ -122,7 +122,7 @@ if __name__ == '__main__':
     model = model.to(device=configs.device)
 
     cons = 0
-    video_num = '00' #input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
     out_cap = None
     model.eval()
 
