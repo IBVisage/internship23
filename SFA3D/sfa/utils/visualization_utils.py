@@ -133,9 +133,15 @@ def show_rgb_image_with_boxes(img, labels, calib):
         if cls_id < 0:
             continue
         corners_3d = compute_box_3d(dim, location, ry)
+        ## increase height of center coordinate
+        location[1] = location[1] - dim[0] / 2
+        center  = project_to_image(location.reshape(1, -1), calib.P2)
+
         corners_2d = project_to_image(corners_3d, calib.P2)
 
         img = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
+        # draw center
+        img = cv2.circle(img, (center[0][0], center[0][1]), 5, (0,0,255), -1)
         corners_2d_list.append(corners_2d)
 
     # print("\n Idu corners_2d tocke: \n")

@@ -122,7 +122,7 @@ if __name__ == '__main__':
     model = model.to(device=configs.device)
 
     cons = 0
-    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    video_num = '00' #input("Broj videa iz KITTI tracking dataseta (00-28) : ")
     out_cap = None
     model.eval()
 
@@ -157,8 +157,9 @@ if __name__ == '__main__':
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
             # calib = Calibration(img_path.replace(".png", ".txt").replace("image_2", "calib"))
             calib = Calibration("../dataset/kitti/testing/calib/00" + video_num + ".txt")
-            print(img_path.replace(".png", ".txt").replace("image_2", "calib"))
-            print(detections)
+            # print(img_path.replace(".png", ".txt").replace("image_2", "calib"))
+            # print(detections)
+
             kitti_dets = convert_det_to_real_values(detections)
             kitti_dets_copius = np.copy(kitti_dets)
 
@@ -179,8 +180,8 @@ if __name__ == '__main__':
             # Define file name for the combined data
             combined_filename = os.path.join("outputs/" + output_folder, "out_" + formatted_cons + ".txt")
 
-            print(kitti_dets_copius)
-            print(corners_out)
+            # print(kitti_dets_copius)
+            # print(corners_out)
 
             # Save kitti_dets_copius to a text file
             with open(combined_filename, "w") as file:
