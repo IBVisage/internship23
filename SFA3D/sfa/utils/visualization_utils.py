@@ -119,6 +119,8 @@ def draw_box_3d(image, corners, color=(0, 0, 255)):
 
     return image, corners
 
+def draw_circle_center(img, location, color=(0,0,255)):
+    cv2.circle(img, location, radius=5, thickness=-1)
 
 def show_rgb_image_with_boxes(img, labels, calib):
     corners_2d_list = []
@@ -131,6 +133,16 @@ def show_rgb_image_with_boxes(img, labels, calib):
         corners_3d = compute_box_3d(dim, location, ry)
         corners_2d = project_to_image(corners_3d, calib.P2)
 
+        ### Adition ###
+
+        loc_tmp = location.reshape(-1,1)
+
+
+        center = project_to_image(loc_tmp, calib.P2)
+
+        draw_circle_center(img, center, color=cnf.colors[int(cls_id)])
+
+        ### End of addition ###
         img, corners_out = draw_box_3d(img, corners_2d, color=cnf.colors[int(cls_id)])
         corners_2d_list.append(corners_2d)
 
