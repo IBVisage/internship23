@@ -3,26 +3,7 @@ import matplotlib.pyplot as plt
 from copy import copy
 
 
-beta = 2
-k = 0
-alpha = 0.1
-lam = alpha**2 * (N + k) - N
 
-# Sigma point weights
-w0 = lam / (N+ k)
-w0c = lam / (N+ lam) + (1-alpha**2) + beta
-wi = 1 / (2 * (N + lam))
-
-w = np.array([w0])
-w = np.append(w, wi*np.ones(2 * N))
-
-wc = np.array([w0c])
-wc = np.append(wc, wi * np.ones(2 * N))
-wc = wc * np.eye(1 + 2 * N)
-    
-
-sigma_p = 100
-sigma_q = 10
 
 # State model matrix
 dt = 0.01
@@ -121,6 +102,34 @@ def meas_func(X):
     z = X
     return z
 
+x_ = np.array([0])
+# New measure
+
+
+N = x_.shape[0]
+
+beta = 2
+k = 0
+alpha = 0.1
+lam = alpha**2 * (N + k) - N
+
+# Sigma point weights
+w0 = lam / (N+ k)
+w0c = lam / (N+ lam) + (1-alpha**2) + beta
+wi = 1 / (2 * (N + lam))
+
+w = np.array([w0])
+w = np.append(w, wi*np.ones(2 * N))
+
+wc = np.array([w0c])
+wc = np.append(wc, wi * np.ones(2 * N))
+wc = wc * np.eye(1 + 2 * N)
+    
+
+sigma_p = 100
+sigma_q = 10
+
+
 
 x_true = np.linspace(0,3,300)
 y_true = x_true**np.sinc(x_true)
@@ -128,11 +137,7 @@ y_true = x_true**np.sinc(x_true)
 x_predict = []
 
 
-x_ = np.array([0])
-# New measure
-z = np.array([0])
 
-N = x_.shape[0]
 
 
 
