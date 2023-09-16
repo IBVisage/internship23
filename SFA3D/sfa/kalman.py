@@ -2,11 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from copy import copy
 
-x_ = np.array([0])
-# New measure
-z = np.array([0])
-
-N = x_.shape[0]
 
 beta = 2
 k = 0
@@ -81,8 +76,6 @@ def ukf_predict(x_, sigma_p, F, Q, sigma_q, w, wc, P_nn):
 
     # Sigma point propagation
     # Nonlinear funciton F
-    # if N == 1:
-    #     X_nn = X_nn[:, np.newaxis]
 
     X_apriori = np.matmul(F,X_nn)
 
@@ -134,6 +127,12 @@ y_true = x_true**np.sinc(x_true)
 
 x_predict = []
 
+
+x_ = np.array([0])
+# New measure
+z = np.array([0])
+
+N = x_.shape[0]
 
 
 
