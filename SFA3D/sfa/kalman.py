@@ -137,10 +137,6 @@ y_true = x_true**np.sinc(x_true)
 x_predict = []
 
 
-
-
-
-
 P_nn = sigma_p * np.eye(N)
 
 for ii in range(len(x_true)):
@@ -149,14 +145,10 @@ for ii in range(len(x_true)):
     else:
         X_apriori, x_apriori, P_apriori = ukf_predict(x_apriori, sigma_p, F, Q, sigma_q, w, wc, P_apriori)
 
-    z = y_true[ii]
-    x_predict.append(copy(z))
-
     x_apriori, P_apriori = ukf_update(z, X_apriori, x_apriori, P_apriori, w, wc, R, measure_func= meas_func)
 
 plt.figure()
 plt.plot(x_true, y_true)
-plt.plot(x_true, x_predict)
 plt.show()
 
 # Model procesnog šuma Q i model matrice F i mjerna funkcija h
