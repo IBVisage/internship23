@@ -25,7 +25,7 @@ def calculate_corners(center_x, center_y, width, length, orientation):
     return [(x1, y1), (x2, y2), (x4, y4), (x3, y3)]
 
 
-rectangle1 = [1,1, 2, 2, 0]
+rectangle1 = [1,1, 2, 4, 1.58/4]
 rectangle2 = [1,1, 2, 4, 0]
 
 corners1 = calculate_corners(rectangle1[0], rectangle1[1], rectangle1[2], rectangle1[3], rectangle1[4])
