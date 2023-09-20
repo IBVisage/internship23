@@ -65,7 +65,7 @@ def intersection_over_union(object1, object2):
     poly1 = shapely.Polygon(corners1)
     poly2 = shapely.Polygon(corners2)
 
-    #visualise(poly1, poly2)
+    visualise(poly1, poly2)
     
     iou = 0
     if poly1.intersects(poly2):
@@ -80,8 +80,8 @@ def intersection_over_union(object1, object2):
 # car2 = [1.00000000,	19.44323464,	-0.30678950,	-1.54884861,	1.61409998,	1.82322875,	4.36537266,
 #          -1.58108211,	19.445654863321167,	1.5865737449664037]
 
-# car1 = [0, 3, 15, 0, 0, 2, 4, 0.45, 0, 0]
-# car2 = [0, 3, 0, 0, 0, 2, 4, 0, 0, 0]
+car1 = [0, 0, 0, 0, 0, 4, 4, 0, 0, 0]
+car2 = [0, 0, 2, 0, 0, 4, 4, 0, 0, 0]
 
 iou = intersection_over_union(car1, car2)
 

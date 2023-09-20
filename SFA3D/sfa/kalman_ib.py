@@ -103,7 +103,7 @@ def ukf_update(z, X_apriori, x_apriori, P_apriori, w, wc, R, measure_func):
     # Mean of measurement space
     # z_mean = np.matmul(Z, w)S
     # z_mean = compute_mean_vector(Z, w)
-    z_mean = np.mean(Z * w, axis=1)
+    z_mean = Z @ w
     
     # Reshape to column vector
 
@@ -118,8 +118,8 @@ def ukf_update(z, X_apriori, x_apriori, P_apriori, w, wc, R, measure_func):
     P_zinv = np.linalg.inv(P_z)
     K = np.matmul(P_xz, P_zinv)
 
-    x_aposteriori = x_apriori.transpose() + np.matmul(K, (z - z_mean.transpose())[0,:])
-    P_aposteriori = P_apriori - np.matmul(np.matmul(K, P_z), K.transpose())
+    x_aposteriori = x_apriori.transpose() + K @ (z - z_mean.transpose())[0,:]
+    P_aposteriori = P_apriori - K @ P_z @ K.transpose()
     return x_aposteriori, P_aposteriori
 
 def meas_func(X):
@@ -189,9 +189,7 @@ y_true = data[1, :]
 
 x_predict = []
 
-# plt.figure()
-# plt.plot(x_true, y_true)
-# plt.show()
+
 
 
 P_nn = sigma_p * np.eye(N)
@@ -209,11 +207,15 @@ for ii in range(len(x_true)):
 
     x_apriori, P_apriori = ukf_update(z, X_apriori, x_apriori, P_apriori, w, wc, R, measure_func= meas_func)
 
-    x_predict.append([x_apriori[0], x_apriori[2]])
+    x_predict.append([x_apriori[0], x_apriori[3]])
     
     pass
 
-
+plt.figure()
+plt.plot(x_true, y_true)
+plt.figure()
+plt.plot(x_predict[0], x_predict[1])
+plt.show()
 
 pass
 
