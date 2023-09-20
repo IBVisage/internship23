@@ -22,7 +22,8 @@ def process_file(file_path, out_path, pol_indices = [1, 2]):
 
                         # Calculate paramaters
                         r = math.sqrt(float(tmp[0])**2  +  float(tmp[1])**2)
-                        theta = math.atan2(float(tmp[0]), float(tmp[1]))
+                        theta = math.atan2(float(tmp[1]), float(tmp[0]))
+
 
                         # Add them in form of a string
                         numbers.append(str(r))
