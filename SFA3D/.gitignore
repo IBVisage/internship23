@@ -2,6 +2,7 @@ SFA3D_env/
 SFA3D_38env/
 dataset/kitti/training/*
 dataset/kitti/testing/*
+sfa/trash/
 
 
 !dataset/kitti/training/.gitkeep
