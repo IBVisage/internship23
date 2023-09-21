@@ -181,3 +181,25 @@ def convert_det_to_real_values(detections, num_classes=3):
                 kitti_dets.append([cls_id, x, y, z, _h, w, l, _yaw])
 
     return np.array(kitti_dets)
+
+### Our code
+
+def convert_real_to_bev(detection):
+    class_num, x, y, z, h, w, l, yaw, r, theta = detection
+    _x = y * cnf.BEV_HEIGHT / cnf.bound_size_x - cnf.boundary['minX']
+    _y = x * cnf.BEV_WIDTH / cnf.bound_size_y - cnf.boundary['minY']
+    _w = w * cnf.BEV_WIDTH / cnf.bound_size_y
+    _l = l * cnf.BEV_HEIGHT / cnf.bound_size_x
+    yaw = -yaw
+
+    return class_num, _x, _y, _w, _l, yaw
+
+def draw_real_to_bev(detection, bev_img):
+    # adding skew to y so it is in the middle when it is 0
+    # y is on index 2
+    detection[2] = detection[2] + cnf.boundary_back["maxY"]
+    class_num, bev_x, bev_y, bev_w, bev_l, yaw = convert_real_to_bev(detection)
+    
+    drawRotatedBox(bev_img, bev_x, bev_y, bev_w, bev_l, yaw, cnf.colors[class_num])
+
+    

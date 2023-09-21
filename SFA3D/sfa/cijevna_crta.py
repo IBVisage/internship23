@@ -31,7 +31,7 @@ if src_dir not in sys.path:
 from data_process.kitti_dataloader import create_test_dataloader
 from models.model_utils import create_model
 from utils.misc import make_folder, time_synchronized
-from utils.evaluation_utils import decode, post_processing, draw_predictions, convert_det_to_real_values
+from utils.evaluation_utils import decode, post_processing, draw_predictions, convert_det_to_real_values, draw_real_to_bev
 from utils.torch_utils import _sigmoid
 import config.kitti_config as cnf
 from data_process.transformation import lidar_to_camera_box
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     model = model.to(device=configs.device)
 
     cons = 0
-    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    video_num = "12"# input("Broj videa iz KITTI tracking dataseta (00-28) : ")
     out_cap = None
     model.eval()
 
@@ -148,6 +148,17 @@ if __name__ == '__main__':
             bev_map = cv2.resize(bev_map, (cnf.BEV_WIDTH, cnf.BEV_HEIGHT))
             bev_map = draw_predictions(bev_map, detections.copy(), configs.num_classes)
 
+            kitti_dets = convert_det_to_real_values(detections)
+            kitti_dets_copius = np.copy(kitti_dets)
+
+
+
+            detection = [1,25,0,0,0,3,6,0,5,0]
+            draw_real_to_bev(detection, bev_map)
+
+            # Draw kalman predictions
+            # bev_map = draw_predictions(bev_map, )
+
             # Rotate the bev_map
             bev_map = cv2.rotate(bev_map, cv2.ROTATE_180)
 
@@ -160,8 +171,8 @@ if __name__ == '__main__':
             # print(img_path.replace(".png", ".txt").replace("image_2", "calib"))
             # print(detections)
 
-            kitti_dets = convert_det_to_real_values(detections)
-            kitti_dets_copius = np.copy(kitti_dets)
+            
+
 
             if len(kitti_dets) > 0:
                 kitti_dets[:, 1:] = lidar_to_camera_box(kitti_dets[:, 1:], calib.V2C, calib.R0, calib.P2)
