@@ -122,7 +122,7 @@ if __name__ == '__main__':
     model = model.to(device=configs.device)
 
     cons = 0
-    video_num = "12"# input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
     out_cap = None
     model.eval()
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
             kitti_dets_copius = np.copy(kitti_dets)
 
 
-
+            # bev drawing, before this add kalma filter
             detection = [1,25,0,0,0,3,6,0,5,0]
             draw_real_to_bev(detection, bev_map)
 
