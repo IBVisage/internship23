@@ -151,6 +151,26 @@ def show_rgb_image_with_boxes(img, labels, calib):
 
     return img, corners_2d_list
 
+def draw_box_rgb_prediction(img, detection, calib, id, color_id):
+    
+    cls_id, location, dim, ry = detection[0], detection[1:4], detection[4:7], detection[7]
+
+    
+    if location[2] < 2.0:  # The object is too close to the camera, ignore it during visualization
+        return img
+    if cls_id < 0:
+        return img
+    corners_3d = compute_box_3d(dim, location, ry)
+    ## increase height of center coordinate
+    # location[1] = location[1] - dim[0] / 2
+    # center  = project_to_image(location.reshape(1, -1), calib.P2)
+
+    corners_2d = project_to_image(corners_3d, calib.P2)
+
+    img = draw_box_3d(img, corners_2d, color=cnf.colors[int(color_id)])
+
+    return img 
+
 
 def merge_rgb_to_bev(img_rgb, img_bev, output_width):
     img_rgb_h, img_rgb_w = img_rgb.shape[:2]

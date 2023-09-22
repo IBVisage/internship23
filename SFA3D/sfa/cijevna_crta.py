@@ -35,7 +35,7 @@ from utils.evaluation_utils import decode, post_processing, draw_predictions, co
 from utils.torch_utils import _sigmoid
 import config.kitti_config as cnf
 from data_process.transformation import lidar_to_camera_box
-from utils.visualization_utils import merge_rgb_to_bev, show_rgb_image_with_boxes
+from utils.visualization_utils import merge_rgb_to_bev, show_rgb_image_with_boxes, draw_box_rgb_prediction
 from data_process.kitti_data_utils import Calibration
 
 
@@ -153,14 +153,7 @@ if __name__ == '__main__':
 
 
 
-            detection = [1,25,0,0,0,3,6,0,5,0]
-            draw_real_to_bev(detection, bev_map)
 
-            # Draw kalman predictions
-            # bev_map = draw_predictions(bev_map, )
-
-            # Rotate the bev_map
-            bev_map = cv2.rotate(bev_map, cv2.ROTATE_180)
 
             img_path = metadatas['img_path'][0]
             img_rgb = img_rgbs[0].numpy()
@@ -172,11 +165,31 @@ if __name__ == '__main__':
             # print(detections)
 
             
+            detection = np.array([1, 5, 0,-1.2 ,2 ,1 ,5 ,0])
+            print(detection.shape)
 
+            draw_real_to_bev(detection, bev_map)
+
+            detection[1:] = lidar_to_camera_box([detection[1:]], calib.V2C, calib.R0, calib.P2)
+
+            img_bgr = draw_box_rgb_prediction(img_bgr, detection, calib, id=2, color_id = 2)
 
             if len(kitti_dets) > 0:
                 kitti_dets[:, 1:] = lidar_to_camera_box(kitti_dets[:, 1:], calib.V2C, calib.R0, calib.P2)
                 img_bgr, corners_out = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
+
+
+
+
+
+
+
+            # Draw kalman predictions
+            # bev_map = draw_predictions(bev_map, )
+
+            # Rotate the bev_map
+            bev_map = cv2.rotate(bev_map, cv2.ROTATE_180)
+                
 
             out_img = merge_rgb_to_bev(img_bgr, bev_map, output_width=configs.output_width)
 
