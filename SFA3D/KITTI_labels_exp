@@ -1,0 +1,73 @@
+15 feature
+
+1 label (Car, Cyclist, etc.)
+2 trucated ??
+3 occluded ??
+4 alpha (neka relativno mala vrijednost, ali veća od 1)?
+5 bbox_xmin
+6 bbox_ymin
+7 bbox x_max
+8 bbox y_max
+9 dim_height (slicno alpha, al pozitivan)
+10 dim_width (slicno alpha, al pozitivan)
+11 dim_length (slicno alpha, al pozitivan)
+12 loc_x
+13 loc_y
+14 loc_z
+15 roration_y
+16 score (sve nan, ne znam jel se broji)
+
+TO JE KITTI LABELS
+
+-----------------------------------------------------------------------------------------------
+
+OVO JE NAS LABELS
+
+kitti_dets.append([cls_id, x, y, z, _h, w, l, _yaw])
+
+[[ 1.         17.66640513 -3.33347321 -1.53919218  1.43325686  1.60286207
+   3.64057171 -0.14789762]
+ [ 1.         43.37930177 -5.19415956 -1.21345661  1.53673601  1.80068283
+   4.31465569  2.71832442]]
+
+1 label (1. oznacava auto basically)
+
+[[ 0.          7.93624614  0.77379377 -1.54045008  1.74688065  0.57861636
+   1.2073171  -1.57873428]
+ [ 1.         10.98574212 10.40320647 -1.4183688   2.26111054  1.84443405
+   5.77002764 -1.66556942]]
+
+OVO JE PRIMJER GDJE ČOVAC HODA LIJEVO PREMA AUTO, auto je u samom lijevom cosku slike, covac cca na sredini... covac bi trebo bit prvi red labela, dok je auto drugi
+
+-----------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------
+
+TEORIJA LABELA
+
+Koordinatni sustav je postavljen na sljedeći način...
+
+x-os je 0 kod promatrača i usmjerena je u smjeru prema naprijed (na lidar slici okomito, gdje je pozitivni smjer gore)
+y-os je 0 kod promatrača i usmjerena je prema lijevo (na lidar slici horizontalno, gdje je pozitivni smjer dolje)
+z-os predstavlja neku visinu, gdje je 0 na kameri auta?? maybe, possibly
+
+PITANJE: Gdje je točno točka koju promatramo? Vjerojatno neki kut u odnosu na prid auta...!!!!!!! RIP
+
+Zadnji broj je kut u radijanima zatvoren s pozitivnim dijelom x-osi u pozitivnom smjeru, (-pi,pi)
+
+PITANJE: Što mjerimo, odakle mjerimo? Visina z ide od kamere na autu? Mjeri li jedan od donjih cornera auta ili gornjih... vrijednosti su otprilike (-1.3,-1.8)
+	 Možemo myb nać primjer s kamionom da to provjerimo?
+	 
+-----------------------------------------------------------------------------------------------
+
+KAKO IZ NASIH LABELA (cls, x, y, z, h, w, l, arg) DOBIT CORNERE NA 3D SLICI?
+
+Rekao bih da je odgovor u:
+            if len(kitti_dets) > 0:
+                kitti_dets[:, 1:] = lidar_to_camera_box(kitti_dets[:, 1:], calib.V2C, calib.R0, calib.P2)
+                img_bgr, corners_out = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
+..........
+Ovdje treba prvo iz lidar_to_camera_box dobit nove koordinate, a onda iz show_rgb_image_with_boxes funckije uzeti dio gdje kreira corners_2d... triba isprobat!
+
+
+   
