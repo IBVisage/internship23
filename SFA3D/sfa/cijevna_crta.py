@@ -38,6 +38,7 @@ import config.kitti_config as cnf
 from data_process.transformation import lidar_to_camera_box
 from utils.visualization_utils import merge_rgb_to_bev, show_rgb_image_with_boxes, draw_box_rgb_prediction
 from data_process.kitti_data_utils import Calibration
+from hungarian import hungarian, testing_function
 
 
 import os
@@ -157,7 +158,6 @@ detections_folder = "./outputs/out_vid_polar_all/out_vid_12"
 detection_files = os.listdir(detections_folder)
 
 detection_files.sort()
-print(detection_files)
 
 max_frames_lost = 5
 distance_threshold = 10
@@ -202,7 +202,27 @@ for frame, detection_file in enumerate(detection_files, start=1):
     detections = np.loadtxt(detection_file_path, delimiter='\t')
 
     if frame > 1:
+
+        hung_threshold = 10
+        hung_ignore = 999
+        
+        used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(detections), copy(active_tracks),
+                                                                                 metric.euclidian, hung_threshold,
+                                                                                 hung_ignore, frame)
+        
+        # print(f"frame {frame}")
+        # print(f"DETECTIONS {len(detections)} track_nums {len(active_tracks)} and track/det pairs {len(used_track_detection_pairs)}")
+
+        # print(f"unused_tracks {unused_tracks}")
+        # print(f"unused_detections { unused_detections}")
+
+
         tracks_to_update = []
+        tracks_to_remove = []
+
+        for act_track in active_tracks.values():
+            act_track.increment_age()
+
 
         if detections.ndim == 1:
             if len(detections) == 0:
@@ -212,46 +232,64 @@ for frame, detection_file in enumerate(detection_files, start=1):
 
         matched_detections = set()
 
-        tracks_to_remove = []
+        # if len(detections) > 0:
+        #     for detection in detections:
+        #         min_distance = 50
+        #         min_track_id = -1
 
-        for act_track in active_tracks.values():
-            act_track.increment_age()
+        #         for act_track in active_tracks.values():
+        #             distance_comparison_element = act_track.current_object
+        #             distance_comparison_element[1] = act_track.current_prediction[0]
+        #             distance_comparison_element[2] = act_track.current_prediction[3]
 
-        if len(detections) > 0:
-            for detection in detections:
-                min_distance = 50
-                min_track_id = -1
+        #             distance = metric.euclidian(detection, distance_comparison_element)
 
-                for act_track in active_tracks.values():
-                    distance_comparison_element = act_track.current_object
-                    distance_comparison_element[1] = act_track.current_prediction[0]
-                    distance_comparison_element[2] = act_track.current_prediction[3]
+        #             if distance < min_distance:
+        #                 min_distance = distance
+        #                 min_track_id = act_track.track_id
 
-                    distance = metric.euclidian(detection, distance_comparison_element)
+        #         if min_distance >= distance_threshold or len(active_tracks) < 1:
+        #             new_track_id = len(all_tracks) + 1
+        #             make_new_track(new_track_id, detection)
+        #             matched_detections.add(new_track_id)
 
-                    if distance < min_distance:
-                        min_distance = distance
-                        min_track_id = act_track.track_id
+        #         if min_distance < distance_threshold:
+        #             if min_track_id not in matched_detections:
+        #                 active_tracks[min_track_id].update(detection)
+        #                 active_tracks[min_track_id].frames_since_last_update = 0
+        #                 matched_detections.add(min_track_id)
+        #                 tracks_to_update.append(min_track_id)
+        #             else:
+        #                 new_track_id = len(all_tracks) + 1
+        #                 make_new_track(new_track_id, detection)
+        #                 matched_detections.add(new_track_id)
 
-                if min_distance >= distance_threshold or len(active_tracks) < 1:
-                    new_track_id = len(all_tracks) + 1
-                    make_new_track(new_track_id, detection)
-                    matched_detections.add(new_track_id)
 
-                if min_distance < distance_threshold:
-                    if min_track_id not in matched_detections:
-                        active_tracks[min_track_id].update(detection)
-                        active_tracks[min_track_id].frames_since_last_update = 0
-                        matched_detections.add(min_track_id)
-                        tracks_to_update.append(min_track_id)
-                    else:
-                        new_track_id = len(all_tracks) + 1
-                        make_new_track(new_track_id, detection)
-                        matched_detections.add(new_track_id)
+        for det in unused_detections:
+            if len(det):
+                new_track_id = len(all_tracks) + 1
+                make_new_track(new_track_id, det)
+            
+        
+        for track_det_pair in used_track_detection_pairs:
+            active_tracks[track_det_pair[0]].update(track_det_pair[1])
+            active_tracks[track_det_pair[0]].frames_since_last_update = 0
+            tracks_to_update.append(track_det_pair[0])
+            pass
+        
 
-        print(f"\nFrame je {frame}\n")
-        for active_track_id, active_track in active_tracks.items():
-            print(f"ID trake : {active_track_id}, Frames since last update : {active_track.frames_since_last_update}")
+        # if frame > 500:
+        #     for active_track_id, active_track in active_tracks.items():
+        #         print(f"ID trake : {active_track_id}")
+
+
+        # if frame in range(15, 25):
+        #     print(f"FRAME: {frame}")
+        #     print(f"matched : {matched_detections}")
+        #     print(f"matched hungarian : {used_track_detection_pairs}")
+
+        #     print(f"uunused track {unused_tracks}")
+        #     print(f"uunused detections {unused_detections}")
 
         update_all_active_tracks()
 
@@ -263,6 +301,8 @@ for frame, detection_file in enumerate(detection_files, start=1):
             del active_tracks[track_id]
 
         predict_all_active_tracks()
+
+
 
     for track_id, active_track in active_tracks.items():
         current_object_data.append(active_track.current_prediction)
@@ -350,16 +390,14 @@ if __name__ == '__main__':
     configs = parse_test_configs()
 
     model = create_model(configs)
-    print('\n\n' + '-*=' * 30 + '\n\n')
     assert os.path.isfile(configs.pretrained_path), "No file at {}".format(configs.pretrained_path)
     model.load_state_dict(torch.load(configs.pretrained_path, map_location='cpu'))
-    print('Loaded weights from {}\n'.format(configs.pretrained_path))
 
     configs.device = torch.device('cpu' if configs.no_cuda else 'cuda:{}'.format(configs.gpu_idx))
     model = model.to(device=configs.device)
 
     cons = 0
-    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    video_num = "12" # input("Broj videa iz KITTI tracking dataseta (00-28) : ")
     out_cap = None
     model.eval()
     iteration = 0
@@ -396,10 +434,6 @@ if __name__ == '__main__':
             kitti_dets = convert_det_to_real_values(detections)
             kitti_dets_copius = np.copy(kitti_dets)
 
-            print(len(objects_list))
-            print(len(vehicle_list))
-            print(len(orientations_list))
-            print(len(ids_list))
 
             if iteration >= 1:
                 for index, obj in enumerate(objects_list[iteration-1]):
@@ -459,8 +493,6 @@ if __name__ == '__main__':
 
             cons = cons + 1
 
-            print('\tDone testing the {}th sample, time: {:.1f}ms, speed {:.2f}FPS'.format(batch_idx, (t2 - t1) * 1000,
-                                                                                           1 / (t2 - t1)))
             if configs.save_test_output:
                 if configs.output_format == 'image':
                     img_fn = os.path.basename(metadatas['img_path'][0])[:-4]
