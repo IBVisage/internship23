@@ -35,15 +35,30 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
                 distance_comparison_element[1] = tracks.get(track).current_prediction[0]
                 distance_comparison_element[2] = tracks.get(track).current_prediction[3]
 
-                distance = np.linalg.norm(detection[1:3] - distance_comparison_element[1:3])
+                # distance = cost_func(detection, distance_comparison_element, threshold)
+                
+                # if cost too big then ignore it
 
-                # if too big then ignore it
+                distance = cost_func(detection, distance_comparison_element)
+
                 if distance > threshold :
                         distance = thresh_ignore
 
+
                 cost_matrix[track_idx,det_idx] = distance
 
-    
+        
+        
+        min_better = False
+        if min_better:
+            cost_matrix = cost_matrix * -1 + 1
+
+
+
+        # if frame in range(1, 6):
+        #     print(f"FRAME: {frame}")
+        #     print(cost_matrix)
+        
         # Use the Hungarian algorithm to find the best assignments
         row_indices, col_indices = linear_sum_assignment(cost_matrix)
 
@@ -51,9 +66,7 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
         #best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for row_idx, col_idx in zip(row_indices, col_indices)]
 
 
-        # stavlja stvari koje su očito predaleko u rješenje i takve treba ukloniti je rnikad se ne desi da postoji traka i detekcija u isto vrijeme nego ih namjerno doda nekoj i onda se gube
-        # No ako se stavi uvjet da ne stavlja ove od 999 onda se niti jedna ne stavi što nema smisla
-        best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for row_idx, col_idx in zip(row_indices, col_indices) if not int(cost_matrix[row_idx, col_idx]) == 999]
+        best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for row_idx, col_idx in zip(row_indices, col_indices) if not int(cost_matrix[row_idx, col_idx]) == thresh_ignore]
 
 
         # for row_idx, col_idx in zip(row_indices, col_indices):

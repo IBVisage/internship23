@@ -1,5 +1,7 @@
 import shapely
 import numpy as np
+import config.kitti_config as cnf
+from copy import copy
 
 
 def cosine_distance(vec1, vec2):
@@ -47,6 +49,9 @@ def calculate_corners(center_x, center_y, width, length, orientation):
             (corners_2d[0, 3], corners_2d[1, 3])]
 
 
+
+
+
 def intersection_over_union(object1, object2):
     # x->1, y->2, 5->w, 6->l, 7->phi
     index = [1, 2, 5, 6, 7]
@@ -64,4 +69,36 @@ def intersection_over_union(object1, object2):
     if poly1.intersects(poly2):
         iou = poly1.intersection(poly2).area / poly1.union(poly2).area
 
-    return iou
+    return iou 
+
+
+def k_iou_euc(object1, object2, euc_thr):
+    ignore_cost=1
+    # minimisation problem
+    w_iou = 3 
+    w_euc = 1
+
+    iou = intersection_over_union(object1, object2)
+
+    euc = euclidian(object1, object2)
+
+    # Skip if too far away, we know that iou will be small
+    if euc > euc_thr:
+        return ignore_cost
+
+    ## euclidean normalisation
+    n_euc = (euc - 0) / (np.sqrt(cnf.boundary['maxX']**2 + (cnf.boundary['maxY'] - cnf.boundary['minY'])**2) - 0)
+
+
+    total_weight = w_iou + w_euc
+    w_iou /= total_weight
+    w_euc /= total_weight
+
+    
+    combined_cost = (w_euc * n_euc) + (w_iou * (1 - iou))
+
+
+    return combined_cost
+
+
+

@@ -3,4 +3,5 @@ SFA3D_38env/
 SFA3D_env/
 dataset/
 sfa/trash
-**/__pycache__/*
+**/__pycache__/
+

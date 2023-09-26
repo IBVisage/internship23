@@ -230,8 +230,7 @@ for frame, detection_file in enumerate(detection_files, start=1):
             else:
                 detections = np.array([detections])
 
-        matched_detections = set()
-
+        # matched_detections = set()
         # if len(detections) > 0:
         #     for detection in detections:
         #         min_distance = 50
@@ -278,9 +277,9 @@ for frame, detection_file in enumerate(detection_files, start=1):
             pass
         
 
-        # if frame > 500:
-        #     for active_track_id, active_track in active_tracks.items():
-        #         print(f"ID trake : {active_track_id}")
+        if frame > 500:
+            for active_track_id, active_track in active_tracks.items():
+                print(f"ID trake : {active_track_id}")
 
 
         # if frame in range(15, 25):
