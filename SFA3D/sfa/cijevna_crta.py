@@ -32,13 +32,13 @@ if src_dir not in sys.path:
 from data_process.kitti_dataloader import create_test_dataloader
 from models.model_utils import create_model
 from utils.misc import make_folder, time_synchronized
-from utils.evaluation_utils import decode, post_processing, draw_predictions, convert_det_to_real_values, draw_real_to_bev
+from utils.evaluation_utils import decode, post_processing, draw_predictions, convert_det_to_real_values, draw_real_to_bev, draw_connecting_line
 from utils.torch_utils import _sigmoid
 import config.kitti_config as cnf
 from data_process.transformation import lidar_to_camera_box
 from utils.visualization_utils import merge_rgb_to_bev, show_rgb_image_with_boxes, draw_box_rgb_prediction
 from data_process.kitti_data_utils import Calibration
-from hungarian import hungarian, testing_function
+from hungarian import testing_function
 
 
 import os
@@ -204,10 +204,10 @@ for frame, detection_file in enumerate(detection_files, start=1):
     if frame > 1:
 
         hung_threshold = 10
-        hung_ignore = 999
+        hung_ignore = 1
         
         used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(detections), copy(active_tracks),
-                                                                                 metric.euclidian, hung_threshold,
+                                                                                 metric.k_iou_euc, hung_threshold,
                                                                                  hung_ignore, frame)
         
         # print(f"frame {frame}")
@@ -277,9 +277,9 @@ for frame, detection_file in enumerate(detection_files, start=1):
             pass
         
 
-        if frame > 500:
-            for active_track_id, active_track in active_tracks.items():
-                print(f"ID trake : {active_track_id}")
+        # if frame > 500:
+        #     for active_track_id, active_track in active_tracks.items():
+        #         print(f"ID trake : {active_track_id}")
 
 
         # if frame in range(15, 25):
@@ -442,10 +442,11 @@ if __name__ == '__main__':
                     draw_input[2] = obj[3]
                     draw_input[3:5] = vehicle_list[iteration-1][index][3:5]
                     draw_input[5:8] = orientations_list[iteration-1][index]
-                    draw_input[8] = 0
-                    draw_input[9] = 0
+                    # draw_input[8] = 0
+                    # draw_input[9] = 0
 
                     draw_real_to_bev(draw_input, bev_map, ids_list[iteration-1][index])
+                    draw_connecting_line(bev_map, copy(draw_input), [0,5,0,0])
 
                     draw_input_copy = copy(draw_input[0:8])
 

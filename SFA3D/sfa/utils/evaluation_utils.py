@@ -25,7 +25,7 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 import config.kitti_config as cnf
-from data_process.kitti_bev_utils import drawRotatedBox
+from data_process.kitti_bev_utils import drawRotatedBox, draw_line
 from copy import copy
 
 
@@ -183,9 +183,17 @@ def convert_det_to_real_values(detections, num_classes=3):
 
     return np.array(kitti_dets)
 
+def convert_dot_to_bev(dot):
+    x,y = dot
+    _x = y * cnf.BEV_HEIGHT / cnf.bound_size_x - cnf.boundary['minX']
+    _y = x * cnf.BEV_WIDTH / cnf.bound_size_y - cnf.boundary['minY']
+
+    # In cv2 you have to put integers
+    return (int(_x), int(_y))
+
 
 def convert_real_to_bev(detection):
-    class_num, x, y, z, h, w, l, yaw, r, theta = detection
+    class_num, x, y, z, h, w, l, yaw = detection
     _x = y * cnf.BEV_HEIGHT / cnf.bound_size_x - cnf.boundary['minX']
     _y = x * cnf.BEV_WIDTH / cnf.bound_size_y - cnf.boundary['minY']
     _w = w * cnf.BEV_WIDTH / cnf.bound_size_y
@@ -206,5 +214,23 @@ def draw_real_to_bev(detection, bev_img, track_id):
     class_num = 0
 
     drawRotatedBox(bev_img, bev_x, bev_y, bev_w, bev_l, yaw, cnf.colors[class_num], track_id)
+
+def draw_connecting_line(bev_img, source, destination):
+    src_dot = copy(source[1:3])
+    dest_dot = copy(destination[1:3])
+
+    src_dot[1] = src_dot[1] + cnf.boundary_back["maxY"]
+    dest_dot[1] = dest_dot[1] + cnf.boundary_back["maxY"]
+
+    src_dot[0] = src_dot[0] - 2
+    dest_dot[0] = dest_dot[0] - 2
+
+    src_bev = convert_dot_to_bev(src_dot)
+    dest_bev = convert_dot_to_bev(dest_dot)
+
+    #src_bev = (int(src_dot[0]), int(src_dot[1]))
+    #dest_bev = (int(dest_dot[0]), int(dest_dot[1]))
+
+    draw_line(bev_img, src_bev, dest_bev)
 
     

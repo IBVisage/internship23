@@ -35,14 +35,17 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
                 distance_comparison_element[1] = tracks.get(track).current_prediction[0]
                 distance_comparison_element[2] = tracks.get(track).current_prediction[3]
 
-                # distance = cost_func(detection, distance_comparison_element, threshold)
                 
+
+                distance = cost_func(detection, distance_comparison_element, threshold)
+                
+
                 # if cost too big then ignore it
 
-                distance = cost_func(detection, distance_comparison_element)
-
-                if distance > threshold :
-                        distance = thresh_ignore
+                # distance = cost_func(detection, distance_comparison_element)
+                
+                # if distance > threshold :
+                #         distance = thresh_ignore
 
 
                 cost_matrix[track_idx,det_idx] = distance
@@ -67,19 +70,6 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
 
 
         best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for row_idx, col_idx in zip(row_indices, col_indices) if not int(cost_matrix[row_idx, col_idx]) == thresh_ignore]
-
-
-        # for row_idx, col_idx in zip(row_indices, col_indices):
-        #     track = row_index_to_track[row_idx]
-        #     detection = col_index_to_detection[col_idx]
-        #     cost = cost_matrix[row_idx, col_idx]
-
-        #     if not cost < threshold:
-        #         best_assignments.append((track, detection))
-
-
-        #print(cost_matrix)
-
    
     g = 0
 
@@ -117,9 +107,7 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
 
 
     return best_assignments, unassigned_tracks, unassigned_detections
-    # Now, best_assignments contains pairs of (track, detection) for the best assignments,
-    # unassigned_tracks contains tracks that haven't been assigned, and
-    # unassigned_detections contains detections that haven't been assigned.
+
 
      
 
@@ -150,89 +138,89 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
 
 
 
-def calculate_cost_matrix(detections, tracks, cost_func, threshold, thresh_ignore):
+# def calculate_cost_matrix(detections, tracks, cost_func, threshold, thresh_ignore):
 
     
 
-    d_n = len(detections)
-    t_n = len(tracks)
-    tracks = list(tracks)
+#     d_n = len(detections)
+#     t_n = len(tracks)
+#     tracks = list(tracks)
 
-    # list of 
+#     # list of 
 
-    cost_matrix = np.zeros((t_n, d_n))
-    for ii in range(t_n):
-        for jj in range(d_n):
-                # distance_comparison_element = tracks[ii].current_object
-                # # distance_comparison_element[1] = act_track.current_prediction[0]
-                # # distance_comparison_element[2] = act_track.current_prediction[3]
-                # # distance = cosine_distance(detection, distance_comparison_element)
-                # distance = cost_func(detections[jj], distance_comparison_element)
+#     cost_matrix = np.zeros((t_n, d_n))
+#     for ii in range(t_n):
+#         for jj in range(d_n):
+#                 # distance_comparison_element = tracks[ii].current_object
+#                 # # distance_comparison_element[1] = act_track.current_prediction[0]
+#                 # # distance_comparison_element[2] = act_track.current_prediction[3]
+#                 # # distance = cosine_distance(detection, distance_comparison_element)
+#                 # distance = cost_func(detections[jj], distance_comparison_element)
 
 
-                distance_comparison_element = tracks[ii].current_object
-                distance_comparison_element[1] = tracks[ii].current_prediction[0]
-                distance_comparison_element[2] = tracks[ii].current_prediction[3]
+#                 distance_comparison_element = tracks[ii].current_object
+#                 distance_comparison_element[1] = tracks[ii].current_prediction[0]
+#                 distance_comparison_element[2] = tracks[ii].current_prediction[3]
 
-                distance = cost_func(detections[jj], distance_comparison_element)
+#                 distance = cost_func(detections[jj], distance_comparison_element)
 
-                # if too big then ignore it
-                if distance > threshold :
-                     distance = thresh_ignore
+#                 # if too big then ignore it
+#                 if distance > threshold :
+#                      distance = thresh_ignore
 
-                cost_matrix[ii,jj] = distance
+#                 cost_matrix[ii,jj] = distance
 
     
                 
-    return cost_matrix
+#     return cost_matrix
 
-def hungarian_assigement(cost_matrix):
+# def hungarian_assigement(cost_matrix):
      
-    best_track_ind, best_detection_ind = linear_sum_assignment(cost_matrix)
+#     best_track_ind, best_detection_ind = linear_sum_assignment(cost_matrix)
 
-    best_assignments = list(zip(best_track_ind, best_detection_ind))
+#     best_assignments = list(zip(best_track_ind, best_detection_ind))
 
-    return best_assignments
+#     return best_assignments
 
-def create_combination_lists(best_assignments, tracks, detections):
+# def create_combination_lists(best_assignments, tracks, detections):
      
-    num_tracks = len(tracks)
-    num_detections = len(detections)
+#     num_tracks = len(tracks)
+#     num_detections = len(detections)
 
-    used_tracks = []
-    used_detections = []
-    used_track_detection_pairs = []
+#     used_tracks = []
+#     used_detections = []
+#     used_track_detection_pairs = []
 
-    # Create lists of used tracks and detections
-    for track_idx, detection_idx in best_assignments:
-        used_tracks.append(tracks[track_idx])
-        used_detections.append(detections[detection_idx])
+#     # Create lists of used tracks and detections
+#     for track_idx, detection_idx in best_assignments:
+#         used_tracks.append(tracks[track_idx])
+#         used_detections.append(detections[detection_idx])
 
-        used_track_detection_pairs.append((tracks[track_idx], detections[detection_idx]))
-
-
-    # Create lists of unused tracks and detections
-    unused_tracks = [track for track in tracks if track not in used_tracks]
-    unused_detections = [detection for detection in detections if detection not in used_detections]
-
-    # Now, used_tracks and used_detections contain the paired track-detection combinations,
-    # while unused_tracks and unused_detections contain the unused tracks and detections.
-
-    return used_track_detection_pairs, unused_tracks, unused_detections
+#         used_track_detection_pairs.append((tracks[track_idx], detections[detection_idx]))
 
 
-def hungarian(detections, tracks, cost_func, threshold, thresh_ignore):
+#     # Create lists of unused tracks and detections
+#     unused_tracks = [track for track in tracks if track not in used_tracks]
+#     unused_detections = [detection for detection in detections if detection not in used_detections]
+
+#     # Now, used_tracks and used_detections contain the paired track-detection combinations,
+#     # while unused_tracks and unused_detections contain the unused tracks and detections.
+
+#     return used_track_detection_pairs, unused_tracks, unused_detections
+
+
+# def hungarian(detections, tracks, cost_func, threshold, thresh_ignore):
      
      
      
-     cost_matrix = calculate_cost_matrix(detections, tracks, cost_func, threshold, thresh_ignore)
+#      cost_matrix = calculate_cost_matrix(detections, tracks, cost_func, threshold, thresh_ignore)
 
-     best_assignments = hungarian_assigement(cost_matrix)
+#      best_assignments = hungarian_assigement(cost_matrix)
 
-     used_track_detection_pairs, unused_tracks, unused_detections = create_combination_lists(best_assignments, tracks, detections)
+#      used_track_detection_pairs, unused_tracks, unused_detections = create_combination_lists(best_assignments, tracks, detections)
 
 
-     return used_track_detection_pairs, unused_tracks, unused_detections
+#      return used_track_detection_pairs, unused_tracks, unused_detections
 
 
      

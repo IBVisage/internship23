@@ -102,3 +102,6 @@ def drawRotatedBox(img, x, y, w, l, yaw, color, identification=None):
         text_x = int((corners_int[0, 0] + corners_int[2, 0]) / 2 - text_size[0] / 2)
         text_y = int((corners_int[0, 1] + corners_int[2, 1]) / 2 + text_size[1] / 2)
         cv2.putText(img, text, (text_x, text_y), font, 0.5, (255, 255, 255), 2)
+
+def draw_line(img, src, dest):
+    cv2.line(img, src, dest,(255,0,0), 3)
