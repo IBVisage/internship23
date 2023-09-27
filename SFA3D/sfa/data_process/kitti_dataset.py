@@ -31,7 +31,7 @@ import config.kitti_config as cnf
 
 
 class KittiDataset(Dataset):
-    def __init__(self, configs, mode='train', lidar_aug=None, hflip_prob=None, num_samples=None):
+    def __init__(self, configs, mode='train', lidar_aug=None, hflip_prob=None, num_samples=None, vid_num="0012"):
         self.dataset_dir = configs.dataset_dir
         self.input_size = configs.input_size
         self.hm_size = configs.hm_size
@@ -47,10 +47,10 @@ class KittiDataset(Dataset):
         self.lidar_aug = lidar_aug
         self.hflip_prob = hflip_prob
 
-        self.image_dir = os.path.join(self.dataset_dir, sub_folder, "image_2")
-        self.lidar_dir = os.path.join(self.dataset_dir, sub_folder, "velodyne")
-        self.calib_dir = os.path.join(self.dataset_dir, sub_folder, "calib")
-        self.label_dir = os.path.join(self.dataset_dir, sub_folder, "label_2")
+        self.image_dir = os.path.join(self.dataset_dir, sub_folder, f"image_2_all/{vid_num}")
+        self.lidar_dir = os.path.join(self.dataset_dir, sub_folder, f"velodyne_all/{vid_num}")
+        self.calib_dir = os.path.join(self.dataset_dir, sub_folder, f"calib")
+        self.label_dir = os.path.join(self.dataset_dir, sub_folder, f"label_2")
         split_txt_path = os.path.join(self.dataset_dir, 'ImageSets', '{}.txt'.format(mode))
         self.sample_id_list = [int(x.strip()) for x in open(split_txt_path).readlines()]
 

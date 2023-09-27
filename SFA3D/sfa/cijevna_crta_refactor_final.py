@@ -230,7 +230,11 @@ if __name__ == '__main__':
     model = model.to(device=configs.device)
 
     cons = 0
-    video_num = "12" # input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    video_num = input("Broj videa iz KITTI tracking dataseta (00-28) : ")
+    if len(video_num) == 1:
+        video_num = "000"+video_num
+    else:
+        video_num = "00"+video_num
     out_cap = None
     model.eval()
     iteration = 0
@@ -245,7 +249,7 @@ if __name__ == '__main__':
 
     ### REFACTORING
 
-    test_dataloader = create_test_dataloader(configs)
+    test_dataloader = create_test_dataloader(configs, video_num)
     with torch.no_grad():
         for batch_idx, batch_data in enumerate(test_dataloader):
             metadatas, bev_maps, img_rgbs = batch_data
@@ -272,7 +276,7 @@ if __name__ == '__main__':
             img_rgb = cv2.resize(img_rgb, (img_rgb.shape[1], img_rgb.shape[0]))
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 
-            calib = Calibration("../dataset/kitti/testing/calib/00" + video_num + ".txt")
+            calib = Calibration("../dataset/kitti/testing/calib/" + video_num + ".txt")
 
             kitti_dets = convert_det_to_real_values(detections)
             kitti_dets_copius = np.copy(kitti_dets)
@@ -292,14 +296,14 @@ if __name__ == '__main__':
 
             # Početak rada kalmana
             if iteration >= 1:
-                hung_threshold = 10
+                hung_threshold = 7.5
                 hung_ignore = 1
                 # Hungarian auction dodijeljivanje parova
                 used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(kitti_dets_copius), copy(active_tracks_ref),
                                                                                         metric.k_iou_euc, hung_threshold,
                                                                                         hung_ignore, iteration)
                 
-                
+
 
                 tracks_to_update = []
                 tracks_to_remove = []
@@ -388,15 +392,16 @@ if __name__ == '__main__':
                 img_bgr, corners_out = show_rgb_image_with_boxes(img_bgr, kitti_dets, calib)
 
             out_img = merge_rgb_to_bev(img_bgr, bev_map, output_width=configs.output_width)
+            
+            ### Pisanje u datoteke
+            # # Create a folder for outputs_video if it doesn't exist
+            # output_folder = "outputs_video_" + video_num
+            # if not os.path.exists("outputs/" + output_folder):
+            #     os.makedirs("outputs/" + output_folder)
 
-            # Create a folder for outputs_video if it doesn't exist
-            output_folder = "outputs_video_" + video_num
-            if not os.path.exists("outputs/" + output_folder):
-                os.makedirs("outputs/" + output_folder)
-
-            formatted_cons = f"{cons:06d}"
-            # Define file name for the combined data
-            combined_filename = os.path.join("outputs/" + output_folder, "out_" + formatted_cons + ".txt")
+            # formatted_cons = f"{cons:06d}"
+            # # Define file name for the combined data
+            # combined_filename = os.path.join("outputs/" + output_folder, "out_" + formatted_cons + ".txt")
 
             """ Ispod je dio za sačuvavanje podataka iz videa. """
 
@@ -418,26 +423,31 @@ if __name__ == '__main__':
 
             cons = cons + 1
 
-            if configs.save_test_output:
-                if configs.output_format == 'image':
-                    img_fn = os.path.basename(metadatas['img_path'][0])[:-4]
-                    cv2.imwrite(os.path.join(configs.results_dir, '{}.jpg'.format(img_fn)), out_img)
-                elif configs.output_format == 'video':
-                    if out_cap is None:
-                        out_cap_h, out_cap_w = out_img.shape[:2]
-                        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-                        out_cap = cv2.VideoWriter(
-                            os.path.join(configs.results_dir, '{}.avi'.format(configs.output_video_fn)),
-                            fourcc, 30, (out_cap_w, out_cap_h))
+            # if configs.save_test_output:
+            #     if configs.output_format == 'image':
+            #         img_fn = os.path.basename(metadatas['img_path'][0])[:-4]
+            #         cv2.imwrite(os.path.join(configs.results_dir, '{}.jpg'.format(img_fn)), out_img)
+            #     elif configs.output_format == 'video':
+            #         if out_cap is None:
+            #             out_cap_h, out_cap_w = out_img.shape[:2]
+            #             fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+            #             out_cap = cv2.VideoWriter(
+            #                 os.path.join(configs.results_dir, '{}.avi'.format(configs.output_video_fn)),
+            #                 fourcc, 30, (out_cap_w, out_cap_h))
 
-                    out_cap.write(out_img)
-                else:
-                    raise TypeError
+            #         out_cap.write(out_img)
+            #     else:
+            #         raise TypeError
 
             cv2.imshow('test-img', out_img)
             print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
             if cv2.waitKey(0) & 0xFF == 27:
                 break
+
+            # print(num_of_all_tracks)
+
     if out_cap:
         out_cap.release()
+
+
     cv2.destroyAllWindows()

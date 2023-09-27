@@ -274,21 +274,6 @@ for frame, detection_file in enumerate(detection_files, start=1):
             active_tracks[track_det_pair[0]].update(track_det_pair[1])
             active_tracks[track_det_pair[0]].frames_since_last_update = 0
             tracks_to_update.append(track_det_pair[0])
-            pass
-        
-
-        # if frame > 500:
-        #     for active_track_id, active_track in active_tracks.items():
-        #         print(f"ID trake : {active_track_id}")
-
-
-        # if frame in range(15, 25):
-        #     print(f"FRAME: {frame}")
-        #     print(f"matched : {matched_detections}")
-        #     print(f"matched hungarian : {used_track_detection_pairs}")
-
-        #     print(f"uunused track {unused_tracks}")
-        #     print(f"uunused detections {unused_detections}")
 
         update_all_active_tracks()
 

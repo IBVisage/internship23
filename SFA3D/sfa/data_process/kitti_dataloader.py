@@ -54,10 +54,10 @@ def create_val_dataloader(configs):
     return val_dataloader
 
 
-def create_test_dataloader(configs):
+def create_test_dataloader(configs, vid_num):
     """Create dataloader for testing phase"""
 
-    test_dataset = KittiDataset(configs, mode='test', lidar_aug=None, hflip_prob=0., num_samples=configs.num_samples)
+    test_dataset = KittiDataset(configs, mode='test', lidar_aug=None, hflip_prob=0., num_samples=configs.num_samples, vid_num=vid_num)
     test_sampler = None
     if configs.distributed:
         test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset)
