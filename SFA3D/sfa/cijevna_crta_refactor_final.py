@@ -41,12 +41,15 @@ from data_process.kitti_data_utils import Calibration
 from hungarian import testing_function
 
 
+
 import os
 import numpy as np
 import tracking_utils.kalman_utils as ukf
 import tracking_utils.visual_utils as visuals
 import tracking_utils.metric_utils as metric
 import matplotlib.pyplot as plt
+from tracking_utils.coordinate_transform import cart_2_polar
+
 
 np.set_printoptions(precision=3, suppress=True)
 
@@ -83,49 +86,6 @@ P = np.array([[10, 0, 0, 0, 0, 0],
               [0, 0, 0, 0, 10, 0],
               [0, 0, 0, 0, 0, 10]])
 
-active_tracks = {}
-all_tracks = []
-
-
-def predict_all_active_tracks():
-    if len(active_tracks) > 0:
-        for active_tracks_id, active_track in active_tracks.items():
-            if active_track.frames_since_last_update > 0:
-                x_pred, p_pred, sigma = ukf.predict(F, active_track.covariance_matrix_estimate, Q,
-                                                    active_track.current_prediction, W, W_mat)
-            else:
-                x_pred, p_pred, sigma = ukf.predict(F, active_track.covariance_matrix_estimate, Q,
-                                                    active_track.current_estimate, W, W_mat)
-
-            active_track.current_prediction = x_pred
-            active_track.covariance_matrix_prediction = p_pred
-            active_track.propagated_sigma_matrix = sigma
-
-    return None
-
-
-def update_all_active_tracks():
-    if len(active_tracks) > 0:
-        for active_tracks_id, active_track in active_tracks.items():
-            if active_track.frames_since_last_update == 0 and active_tracks_id in tracks_to_update:
-                x_estimate, p_estimate = ukf.update(F, active_track.covariance_matrix_prediction, Q, R,
-                                                    active_track.current_prediction, W, W_mat,
-                                                    active_track.propagated_sigma_matrix,
-                                                    active_track.current_object[-2:], active_tracks_id)
-
-                active_track.current_estimate = x_estimate
-                active_track.covariance_matrix_estimate = p_estimate
-
-    return None
-
-
-def make_new_track(identification, detection_vec):
-    new_track = Track(identification, detection_vec, P)
-    active_tracks[new_track_id] = new_track
-    all_tracks.append(new_track)
-    return None
-
-
 class Track:
     def __init__(self, identification, initial_state, cov_matrix):
         self.track_id = identification
@@ -151,168 +111,42 @@ class Track:
 
     def get_trajectory(self):
         return np.vstack([self.previous_objects, self.current_object])
+    
+def make_new_track_ref(identification, detection_vec):
+        new_track = Track(identification, detection_vec, P)
+        active_tracks_ref[new_track_id] = new_track
+        return None
 
-
-detections_folder = "./outputs/out_vid_polar_all/out_vid_12"
-
-detection_files = os.listdir(detections_folder)
-
-detection_files.sort()
-
-max_frames_lost = 5
-distance_threshold = 10
-
-initial_frame = np.loadtxt(os.path.join(detections_folder, "out_000000.txt"), delimiter='\t')
-
-for detection in initial_frame:
-    new_track_id = len(all_tracks) + 1
-    make_new_track(new_track_id, detection)
-
-predict_all_active_tracks()
-
-objects_list = []
-ids_list = []
-orientations_list = []
-vehicle_list = []
-
-current_object_data = []
-current_object_orientations = []
-current_object_ids = []
-current_object_vehicle = []
-
-for track_id, active_track in active_tracks.items():
-    current_object_data.append(active_track.current_prediction)
-    current_object_ids.append(track_id)
-    current_object_orientations.append(active_track.current_object[5:8])
-    current_object_vehicle.append(active_track.current_object[0:5])
-
-objects_list.append(current_object_data)
-ids_list.append(current_object_ids)
-orientations_list.append(current_object_orientations)
-vehicle_list.append(current_object_vehicle)
-
-for frame, detection_file in enumerate(detection_files, start=1):
-    detection_file_path = os.path.join(detections_folder, detection_file)
-
-    current_object_data = []
-    current_object_orientations = []
-    current_object_ids = []
-    current_object_vehicle = []
-
-    detections = np.loadtxt(detection_file_path, delimiter='\t')
-
-    if frame > 1:
-
-        hung_threshold = 10
-        hung_ignore = 1
-        
-        used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(detections), copy(active_tracks),
-                                                                                 metric.k_iou_euc, hung_threshold,
-                                                                                 hung_ignore, frame)
-        
-        # print(f"frame {frame}")
-        # print(f"DETECTIONS {len(detections)} track_nums {len(active_tracks)} and track/det pairs {len(used_track_detection_pairs)}")
-
-        # print(f"unused_tracks {unused_tracks}")
-        # print(f"unused_detections { unused_detections}")
-
-
-        tracks_to_update = []
-        tracks_to_remove = []
-
-        for act_track in active_tracks.values():
-            act_track.increment_age()
-
-
-        if detections.ndim == 1:
-            if len(detections) == 0:
-                detections = np.empty((0, 10))
+    
+def predict_all_active_tracks_ref():
+    if len(active_tracks_ref) > 0:
+        for active_tracks_id, active_track in active_tracks_ref.items():
+            if active_track.frames_since_last_update > 0:
+                x_pred, p_pred, sigma = ukf.predict(F, active_track.covariance_matrix_estimate, Q,
+                                                    active_track.current_prediction, W, W_mat)
             else:
-                detections = np.array([detections])
+                x_pred, p_pred, sigma = ukf.predict(F, active_track.covariance_matrix_estimate, Q,
+                                                    active_track.current_estimate, W, W_mat)
 
-        # matched_detections = set()
-        # if len(detections) > 0:
-        #     for detection in detections:
-        #         min_distance = 50
-        #         min_track_id = -1
+            active_track.current_prediction = x_pred
+            active_track.covariance_matrix_prediction = p_pred
+            active_track.propagated_sigma_matrix = sigma
 
-        #         for act_track in active_tracks.values():
-        #             distance_comparison_element = act_track.current_object
-        #             distance_comparison_element[1] = act_track.current_prediction[0]
-        #             distance_comparison_element[2] = act_track.current_prediction[3]
+    return None
 
-        #             distance = metric.euclidian(detection, distance_comparison_element)
+def update_all_active_tracks_ref():
+    if len(active_tracks_ref) > 0:
+        for active_tracks_id, active_track in active_tracks_ref.items():
+            if active_track.frames_since_last_update == 0 and active_tracks_id in tracks_to_update:
+                x_estimate, p_estimate = ukf.update(F, active_track.covariance_matrix_prediction, Q, R,
+                                                    active_track.current_prediction, W, W_mat,
+                                                    active_track.propagated_sigma_matrix,
+                                                    active_track.current_object[-2:], active_tracks_id)
 
-        #             if distance < min_distance:
-        #                 min_distance = distance
-        #                 min_track_id = act_track.track_id
+                active_track.current_estimate = x_estimate
+                active_track.covariance_matrix_estimate = p_estimate
 
-        #         if min_distance >= distance_threshold or len(active_tracks) < 1:
-        #             new_track_id = len(all_tracks) + 1
-        #             make_new_track(new_track_id, detection)
-        #             matched_detections.add(new_track_id)
-
-        #         if min_distance < distance_threshold:
-        #             if min_track_id not in matched_detections:
-        #                 active_tracks[min_track_id].update(detection)
-        #                 active_tracks[min_track_id].frames_since_last_update = 0
-        #                 matched_detections.add(min_track_id)
-        #                 tracks_to_update.append(min_track_id)
-        #             else:
-        #                 new_track_id = len(all_tracks) + 1
-        #                 make_new_track(new_track_id, detection)
-        #                 matched_detections.add(new_track_id)
-
-
-        for det in unused_detections:
-            if len(det):
-                new_track_id = len(all_tracks) + 1
-                make_new_track(new_track_id, det)
-            
-        
-        for track_det_pair in used_track_detection_pairs:
-            active_tracks[track_det_pair[0]].update(track_det_pair[1])
-            active_tracks[track_det_pair[0]].frames_since_last_update = 0
-            tracks_to_update.append(track_det_pair[0])
-            pass
-        
-
-        # if frame > 500:
-        #     for active_track_id, active_track in active_tracks.items():
-        #         print(f"ID trake : {active_track_id}")
-
-
-        # if frame in range(15, 25):
-        #     print(f"FRAME: {frame}")
-        #     print(f"matched : {matched_detections}")
-        #     print(f"matched hungarian : {used_track_detection_pairs}")
-
-        #     print(f"uunused track {unused_tracks}")
-        #     print(f"uunused detections {unused_detections}")
-
-        update_all_active_tracks()
-
-        for track_id, track in active_tracks.items():
-            if track.is_lost(max_frames_lost):
-                tracks_to_remove.append(track_id)
-
-        for track_id in tracks_to_remove:
-            del active_tracks[track_id]
-
-        predict_all_active_tracks()
-
-
-
-    for track_id, active_track in active_tracks.items():
-        current_object_data.append(active_track.current_prediction)
-        current_object_ids.append(track_id)
-        current_object_orientations.append(active_track.current_object[5:8])
-        current_object_vehicle.append(active_track.current_object[0:5])
-
-    objects_list.append(current_object_data)
-    ids_list.append(current_object_ids)
-    orientations_list.append(current_object_orientations)
-    vehicle_list.append(current_object_vehicle)
+    return None
 
 
 def parse_test_configs():
@@ -401,6 +235,16 @@ if __name__ == '__main__':
     model.eval()
     iteration = 0
 
+
+    ### REFACTORING
+    max_frames_lost = 5
+
+
+    active_tracks_ref = {}
+    num_of_all_tracks = 0
+
+    ### REFACTORING
+
     test_dataloader = create_test_dataloader(configs)
     with torch.no_grad():
         for batch_idx, batch_data in enumerate(test_dataloader):
@@ -433,26 +277,113 @@ if __name__ == '__main__':
             kitti_dets = convert_det_to_real_values(detections)
             kitti_dets_copius = np.copy(kitti_dets)
 
+            ### REFACTOR POČETAK KALMANA
+            kitti_dets_copius = cart_2_polar(kitti_dets_copius)
+            
+            if iteration == 0:
+                for dt in kitti_dets_copius:
+                    num_of_all_tracks += 1
+                    new_track_id = num_of_all_tracks
+                    make_new_track_ref(new_track_id, dt)
+                pass
+
+                predict_all_active_tracks_ref()
+            ### REFACTOR
 
             if iteration >= 1:
-                for index, obj in enumerate(objects_list[iteration-1]):
-                    draw_input = np.zeros((8, ))
-                    draw_input[0] = vehicle_list[iteration-1][index][0]
-                    draw_input[1] = obj[0]
-                    draw_input[2] = obj[3]
-                    draw_input[3:5] = vehicle_list[iteration-1][index][3:5]
-                    draw_input[5:8] = orientations_list[iteration-1][index]
-                    # draw_input[8] = 0
-                    # draw_input[9] = 0
+                ### REFACTOR
+                hung_threshold = 10
+                hung_ignore = 1
+                
+                used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(kitti_dets_copius), copy(active_tracks_ref),
+                                                                                        metric.k_iou_euc, hung_threshold,
+                                                                                        hung_ignore, iteration)
+                g = 0
 
-                    draw_real_to_bev(draw_input, bev_map, ids_list[iteration-1][index])
-                    draw_connecting_line(bev_map, copy(draw_input), [0,5,0,0])
+                tracks_to_update = []
+                tracks_to_remove = []
 
-                    draw_input_copy = copy(draw_input[0:8])
+                for act_track in active_tracks_ref.values():
+                    act_track.increment_age()
 
-                    draw_input_copy[1:] = lidar_to_camera_box([draw_input_copy[1:]], calib.V2C, calib.R0, calib.P2)
 
-                    img_bgr = draw_box_rgb_prediction(img_bgr, draw_input_copy, calib, ids_list[iteration-1][index], 0)
+                if kitti_dets_copius.ndim == 1:
+                    if len(kitti_dets_copius) == 0:
+                        kitti_dets_copius = np.empty((0, 10))
+                    else:
+                        kitti_dets_copius = np.array([kitti_dets_copius])
+                
+                for det in unused_detections:
+                    if len(det):
+                        num_of_all_tracks += 1
+                        new_track_id = num_of_all_tracks
+                        make_new_track_ref(new_track_id, det)
+                    
+                
+                for track_det_pair in used_track_detection_pairs:
+                    active_tracks_ref[track_det_pair[0]].update(track_det_pair[1])
+                    active_tracks_ref[track_det_pair[0]].frames_since_last_update = 0
+                    tracks_to_update.append(track_det_pair[0])
+                    pass
+
+                update_all_active_tracks_ref()
+
+                # Imamo sve detekcije, trebali bi imati sve aktivne trake također u active_tracks_ref koje imaju sve svoje id-ove i sva stanja trenutna
+                # draw input je stanje jednog objekta u kalmanovom filtru i sada su detekcije povezane sa used_track_detections_pairs i e su
+                # u active tracks i to bi sve t 
+
+                # Trenutno imamo iscrtane sve detekcije. Sada treba iscrtati sve parove i onda iscrtamo sve neiskorištene trake
+                # parove treba posebno
+                for used_pair in used_track_detection_pairs:
+                    # used_track_detection_pairs
+                    track = copy(active_tracks_ref[used_pair[0]])
+                    pair_track_id = copy(used_pair[0])
+                    pair_detection = copy(used_pair[1])
+                    track_prediction = track.current_prediction
+                    track_object = track.current_object
+
+
+                    pair_track_object = np.zeros((8, ))
+                    pair_track_object[0] = pair_detection[0]
+                    pair_track_object[1] = track_prediction[0]
+                    pair_track_object[2] = track_prediction[3]
+                    pair_track_object[3:5] = track_object[3:5]
+                    pair_track_object[5:8] = track_object[5:8]
+                    
+                    draw_real_to_bev(pair_track_object, bev_map, pair_track_id)
+                    draw_connecting_line(bev_map, pair_track_object, pair_detection)
+
+                    pair_track_object[1:] = lidar_to_camera_box([pair_track_object[1:]], calib.V2C, calib.R0, calib.P2)
+                    img_bgr = draw_box_rgb_prediction(img_bgr, pair_track_object, calib, pair_track_id, 0)
+                    
+                
+
+                for unused_track_id in unused_tracks:
+                    if unused_track_id not in tracks_to_remove:
+                        #print(f"FRAME: {iteration}")
+                        unused_track = active_tracks_ref[unused_track_id]
+                        
+                        draw_track = copy(unused_track.current_object[0:8])
+
+                        draw_real_to_bev(draw_track, bev_map, unused_track.track_id)
+
+                        draw_track[1:] = lidar_to_camera_box([draw_track[1:]], calib.V2C, calib.R0, calib.P2)
+                        img_bgr = draw_box_rgb_prediction(img_bgr, draw_track, calib, unused_track.track_id, 0)
+
+
+                predict_all_active_tracks_ref()
+
+
+
+                for track_id, track in active_tracks_ref.items():
+                    # print(track.is_lost(max_frames_lost))
+                    if track.is_lost(max_frames_lost):
+                        tracks_to_remove.append(track_id)
+
+                for track_id in tracks_to_remove:
+                    del active_tracks_ref[track_id]
+
+            ### REFACTOR KRAJ
 
             iteration += 1
 

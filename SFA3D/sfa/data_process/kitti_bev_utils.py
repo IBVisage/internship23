@@ -8,6 +8,7 @@ import os
 import sys
 
 import cv2
+
 import numpy as np
 
 src_dir = os.path.dirname(os.path.realpath(__file__))
@@ -104,4 +105,4 @@ def drawRotatedBox(img, x, y, w, l, yaw, color, identification=None):
         cv2.putText(img, text, (text_x, text_y), font, 0.5, (255, 255, 255), 2)
 
 def draw_line(img, src, dest):
-    cv2.line(img, src, dest,(255,0,0), 3)
+    cv2.line(img, src, dest,(255,255,255), 2, cv2.LINE_4)

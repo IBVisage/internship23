@@ -87,7 +87,7 @@ def k_iou_euc(object1, object2, euc_thr):
         return ignore_cost
 
     ## euclidean normalisation
-    n_euc = (euc - 0) / (np.sqrt(cnf.boundary['maxX']**2 + (cnf.boundary['maxY'] - cnf.boundary['minY'])**2) - 0)
+    n_euc = (euc - 0) / (np.sqrt(cnf.boundary['maxX']**2 + (cnf.boundary['maxY'] - cnf.boundary['minY']-25)**2) - 0)
 
 
     total_weight = w_iou + w_euc

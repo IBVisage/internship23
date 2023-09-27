@@ -58,9 +58,9 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
 
 
 
-        # if frame in range(1, 6):
-        #     print(f"FRAME: {frame}")
-        #     print(cost_matrix)
+        if frame in range(1, 6):
+            print(f"FRAME: {frame}")
+            print(cost_matrix)
         
         # Use the Hungarian algorithm to find the best assignments
         row_indices, col_indices = linear_sum_assignment(cost_matrix)

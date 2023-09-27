@@ -496,7 +496,7 @@ if __name__ == '__main__':
                     make_new_track_ref(new_track_id, dt)
                 pass
 
-            predict_all_active_tracks_ref()
+                predict_all_active_tracks_ref()
             ### REFACTOR
 
             if iteration >= 1:
@@ -538,15 +538,6 @@ if __name__ == '__main__':
                 update_all_active_tracks_ref()
 
 
-                for track_id, track in active_tracks_ref.items():
-                    print(track.is_lost(max_frames_lost))
-                    if track.is_lost(max_frames_lost):
-                        tracks_to_remove.append(track_id)
-
-                for track_id in tracks_to_remove:
-                    del active_tracks_ref[track_id]
-
-                predict_all_active_tracks_ref()
 
 
                 # Imamo sve detekcije, trebali bi imati sve aktivne trake također u active_tracks_ref koje imaju sve svoje id-ove i sva stanja trenutna
@@ -556,12 +547,21 @@ if __name__ == '__main__':
                 # Trenutno imamo iscrtane sve detekcije. Sada treba iscrtati sve parove i onda iscrtamo sve neiskorištene trake
                 # parove treba posebno
                 for used_pair in used_track_detection_pairs:
-                    #used_track_detection_pairs
+                    # used_track_detection_pairs
                     track = copy(active_tracks_ref[used_pair[0]])
                     pair_track_id = copy(used_pair[0])
                     pair_detection = copy(used_pair[1])
-                    pair_track_object = track.current_object[0:8]
+                    track_prediction = track.current_prediction
+                    track_object = track.current_object
 
+
+                    pair_track_object = np.zeros((8, ))
+                    pair_track_object[0] = pair_detection[0]
+                    pair_track_object[1] = track_prediction[0]
+                    pair_track_object[2] = track_prediction[3]
+                    pair_track_object[3:5] = track_object[3:5]
+                    pair_track_object[5:8] = track_object[5:8]
+                    
                     draw_real_to_bev(pair_track_object, bev_map, pair_track_id)
                     draw_connecting_line(bev_map, pair_track_object, pair_detection)
 
@@ -570,7 +570,7 @@ if __name__ == '__main__':
                     pass
 
                 for unused_track_id in unused_tracks:
-                    print(f"FRAME: {iteration}")
+                    #print(f"FRAME: {iteration}")
                     unused_track = active_tracks_ref[unused_track_id]
                     
                     draw_track = copy(unused_track.current_object[0:8])
@@ -581,16 +581,25 @@ if __name__ == '__main__':
                     img_bgr = draw_box_rgb_prediction(img_bgr, draw_track, calib, unused_track.track_id, 0)
 
 
+                
+                for track_id, track in active_tracks_ref.items():
+                    # print(track.is_lost(max_frames_lost))
+                    if track.is_lost(max_frames_lost):
+                        tracks_to_remove.append(track_id)
 
+                for track_id in tracks_to_remove:
+                    del active_tracks_ref[track_id]
+
+                predict_all_active_tracks_ref()
                 # for index, obj in enumerate(objects_list[iteration-1]):
-                #     draw_input = np.zeros((10, ))
-                #     draw_input[0] = vehicle_list[iteration-1][index][0]
-                #     draw_input[1] = obj[0]
-                #     draw_input[2] = obj[3]
-                #     draw_input[3:5] = vehicle_list[iteration-1][index][3:5]
-                #     draw_input[5:8] = orientations_list[iteration-1][index]
-                #     # draw_input[8] = 0
-                #     # draw_input[9] = 0
+                    # draw_input = np.zeros((10, ))
+                    # draw_input[0] = vehicle_list[iteration-1][index][0]
+                    # draw_input[1] = obj[0]
+                    # draw_input[2] = obj[3]
+                    # draw_input[3:5] = vehicle_list[iteration-1][index][3:5]
+                    # draw_input[5:8] = orientations_list[iteration-1][index]
+                    # # draw_input[8] = 0
+                    # # draw_input[9] = 0
 
                 #     draw_real_to_bev(draw_input, bev_map, ids_list[iteration-1][index])
                 #     # draw_connecting_line(bev_map, copy(draw_input), [0,5,0,0])
@@ -656,10 +665,10 @@ if __name__ == '__main__':
                 else:
                     raise TypeError
 
-            # cv2.imshow('test-img', out_img)
-            # print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
-            # if cv2.waitKey(0) & 0xFF == 27:
-            #     break
+            cv2.imshow('test-img', out_img)
+            print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
+            if cv2.waitKey(0) & 0xFF == 27:
+                break
     if out_cap:
         out_cap.release()
     cv2.destroyAllWindows()
