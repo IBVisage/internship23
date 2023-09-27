@@ -13,9 +13,7 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
     if detections.ndim == 1:
          detections = np.array([detections])
 
-    # print("DETECTIONS")
-    # print(detections)
-     
+    # Postavljanje detekcija i traka tako da se mogu pravilno pratiti 
     row_index_to_track = {i: track for i, track in enumerate(tracks)}
     col_index_to_detection = {i: detection for i, detection in enumerate(detections)}
 
@@ -24,9 +22,8 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
     num_tracks = len(tracks)
     cost_matrix = np.zeros((num_tracks, num_detections))
 
-
+    # IF is used so single detections don't break the loop
     if len(detections[0,:]):
-
         for track_idx, track in enumerate(tracks):
             for det_idx, detection in enumerate(detections):
 
@@ -34,46 +31,36 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
 
                 distance_comparison_element[1] = tracks.get(track).current_prediction[0]
                 distance_comparison_element[2] = tracks.get(track).current_prediction[3]
-
                 
-
+                # COST FUNCTION SETUP AREA
+                # Ovdje treba postaviti da dobro radi funkcija i matrica troška. ovisi o metrici koja se koristi
                 distance = cost_func(detection, distance_comparison_element, threshold)
                 
-
-                # if cost too big then ignore it
+                # Ne briši, ako se zove euklidska potrebno ovo dolje i thresh_ignore = 999
 
                 # distance = cost_func(detection, distance_comparison_element)
                 
                 # if distance > threshold :
                 #         distance = thresh_ignore
 
-
                 cost_matrix[track_idx,det_idx] = distance
 
         
-        
+        # U slučaju da je cost tima "veće je bolje" potrebno je obrnuti vrijednosti da se mogu pravilno minimizirati
         min_better = False
         if min_better:
             cost_matrix = cost_matrix * -1 + 1
 
-
-
-        if frame in range(1, 6):
-            print(f"FRAME: {frame}")
-            print(cost_matrix)
         
         # Use the Hungarian algorithm to find the best assignments
         row_indices, col_indices = linear_sum_assignment(cost_matrix)
 
         # Map the indices back to the specific detections and tracks
-        #best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for row_idx, col_idx in zip(row_indices, col_indices)]
-
-
-        best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for row_idx, col_idx in zip(row_indices, col_indices) if not int(cost_matrix[row_idx, col_idx]) == thresh_ignore]
+        # thresh_ignore služi da se mogu izolirati trake i detekcija koje ne bi trebale biti zajendo. Npr, ako se koristi euklidska
+        # udaljenost, stavi se na 999 kako bi se istaknulo kako je to par koji se filtrira/zanemarije.
+        best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for 
+                            row_idx, col_idx in zip(row_indices, col_indices) if not int(cost_matrix[row_idx, col_idx]) == thresh_ignore]
    
-    g = 0
-
-
     # Initialize lists to store tracks and detections that haven't been assigned
     
     for track in tracks:
@@ -95,16 +82,6 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
         if not assigned:
             unassigned_detections.append(detection)
     
-    g = 0
-    pass
-    
-    # print("Detekcije bez para : " + str(len(unassigned_detections)))
-    # print("Trake bez detekcija : " + str(len(unassigned_tracks)))
-
-    # pokušaj si ispsivati z asvaki krug koje si poveznice sa kojim track id-ovim napravio i ako ti rade neke onda je vjeorjatno dobro
-    # usporedi slike sa onime što se ispisuje, i provejri da li možeš dobro vratiti podatke nazad d ase mogu iskoristiti kako spada
-    
-
 
     return best_assignments, unassigned_tracks, unassigned_detections
 

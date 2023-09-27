@@ -183,6 +183,7 @@ def convert_det_to_real_values(detections, num_classes=3):
 
     return np.array(kitti_dets)
 
+# Convert a dot to bev space
 def convert_dot_to_bev(dot):
     x,y = dot
     _x = y * cnf.BEV_HEIGHT / cnf.bound_size_x - cnf.boundary['minX']
@@ -215,6 +216,7 @@ def draw_real_to_bev(detection, bev_img, track_id):
 
     drawRotatedBox(bev_img, bev_x, bev_y, bev_w, bev_l, yaw, cnf.colors[class_num], track_id)
 
+# Drawing a line on to bev between 2 dots
 def draw_connecting_line(bev_img, source, destination):
     src_dot = copy(source[1:3])
     dest_dot = copy(destination[1:3])

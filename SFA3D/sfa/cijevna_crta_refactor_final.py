@@ -278,27 +278,28 @@ if __name__ == '__main__':
             kitti_dets_copius = np.copy(kitti_dets)
 
             ### REFACTOR POČETAK KALMANA
+            # Dohvaćanje i pretvaranje detekcija u polarne
             kitti_dets_copius = cart_2_polar(kitti_dets_copius)
-            
+            # Stvaranje prvih traka
             if iteration == 0:
                 for dt in kitti_dets_copius:
                     num_of_all_tracks += 1
                     new_track_id = num_of_all_tracks
                     make_new_track_ref(new_track_id, dt)
                 pass
-
+                # Prvotno predviđanje
                 predict_all_active_tracks_ref()
-            ### REFACTOR
 
+            # Početak rada kalmana
             if iteration >= 1:
-                ### REFACTOR
                 hung_threshold = 10
                 hung_ignore = 1
-                
+                # Hungarian auction dodijeljivanje parova
                 used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(kitti_dets_copius), copy(active_tracks_ref),
                                                                                         metric.k_iou_euc, hung_threshold,
                                                                                         hung_ignore, iteration)
-                g = 0
+                
+                
 
                 tracks_to_update = []
                 tracks_to_remove = []
@@ -306,20 +307,20 @@ if __name__ == '__main__':
                 for act_track in active_tracks_ref.values():
                     act_track.increment_age()
 
-
+                # Guard da se objekti pravilno stvore
                 if kitti_dets_copius.ndim == 1:
                     if len(kitti_dets_copius) == 0:
                         kitti_dets_copius = np.empty((0, 10))
                     else:
                         kitti_dets_copius = np.array([kitti_dets_copius])
-                
+                # Generiranje detekcija koje nisu dobile dodijeljenu traku
                 for det in unused_detections:
                     if len(det):
                         num_of_all_tracks += 1
                         new_track_id = num_of_all_tracks
                         make_new_track_ref(new_track_id, det)
                     
-                
+                # Postavljanje traka za update onih kojima je nađen par
                 for track_det_pair in used_track_detection_pairs:
                     active_tracks_ref[track_det_pair[0]].update(track_det_pair[1])
                     active_tracks_ref[track_det_pair[0]].frames_since_last_update = 0
@@ -328,28 +329,24 @@ if __name__ == '__main__':
 
                 update_all_active_tracks_ref()
 
-                # Imamo sve detekcije, trebali bi imati sve aktivne trake također u active_tracks_ref koje imaju sve svoje id-ove i sva stanja trenutna
-                # draw input je stanje jednog objekta u kalmanovom filtru i sada su detekcije povezane sa used_track_detections_pairs i e su
-                # u active tracks i to bi sve t 
-
-                # Trenutno imamo iscrtane sve detekcije. Sada treba iscrtati sve parove i onda iscrtamo sve neiskorištene trake
-                # parove treba posebno
+                # Sada imamo sve detekcije, sve trake. Povezane trake i detekcije su u used_track_detection_pairs i njih
+                # treba povezati na slici.
                 for used_pair in used_track_detection_pairs:
-                    # used_track_detection_pairs
+                    # Stvaranje kopija da ne bude problema u funkcijama. Neke funkcije isto stvaraju kopije na početku
                     track = copy(active_tracks_ref[used_pair[0]])
                     pair_track_id = copy(used_pair[0])
                     pair_detection = copy(used_pair[1])
                     track_prediction = track.current_prediction
                     track_object = track.current_object
 
-
+                    # Konstrukcija objekta
                     pair_track_object = np.zeros((8, ))
                     pair_track_object[0] = pair_detection[0]
                     pair_track_object[1] = track_prediction[0]
                     pair_track_object[2] = track_prediction[3]
                     pair_track_object[3:5] = track_object[3:5]
                     pair_track_object[5:8] = track_object[5:8]
-                    
+                    # Crtanja na sliku i bev                    
                     draw_real_to_bev(pair_track_object, bev_map, pair_track_id)
                     draw_connecting_line(bev_map, pair_track_object, pair_detection)
 
@@ -357,10 +354,9 @@ if __name__ == '__main__':
                     img_bgr = draw_box_rgb_prediction(img_bgr, pair_track_object, calib, pair_track_id, 0)
                     
                 
-
+                # Crtanje traka koje nemaju povezanu detekciju
                 for unused_track_id in unused_tracks:
                     if unused_track_id not in tracks_to_remove:
-                        #print(f"FRAME: {iteration}")
                         unused_track = active_tracks_ref[unused_track_id]
                         
                         draw_track = copy(unused_track.current_object[0:8])
@@ -373,10 +369,8 @@ if __name__ == '__main__':
 
                 predict_all_active_tracks_ref()
 
-
-
+                # Uklanjanje nepotrebnih traka
                 for track_id, track in active_tracks_ref.items():
-                    # print(track.is_lost(max_frames_lost))
                     if track.is_lost(max_frames_lost):
                         tracks_to_remove.append(track_id)
 
