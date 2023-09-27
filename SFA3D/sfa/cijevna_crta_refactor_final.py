@@ -277,6 +277,8 @@ if __name__ == '__main__':
             img_bgr = cv2.cvtColor(img_rgb, cv2.COLOR_RGB2BGR)
 
             calib = Calibration("../dataset/kitti/testing/calib/" + video_num + ".txt")
+            # Za zaustavljanje slika da se može video kreirati
+            max_frames = len(os.listdir("../dataset/kitti/testing/image_2_all/" + video_num))
 
             kitti_dets = convert_det_to_real_values(detections)
             kitti_dets_copius = np.copy(kitti_dets)
@@ -423,29 +425,31 @@ if __name__ == '__main__':
 
             cons = cons + 1
 
-            # if configs.save_test_output:
-            #     if configs.output_format == 'image':
-            #         img_fn = os.path.basename(metadatas['img_path'][0])[:-4]
-            #         cv2.imwrite(os.path.join(configs.results_dir, '{}.jpg'.format(img_fn)), out_img)
-            #     elif configs.output_format == 'video':
-            #         if out_cap is None:
-            #             out_cap_h, out_cap_w = out_img.shape[:2]
-            #             fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-            #             out_cap = cv2.VideoWriter(
-            #                 os.path.join(configs.results_dir, '{}.avi'.format(configs.output_video_fn)),
-            #                 fourcc, 30, (out_cap_w, out_cap_h))
+            if configs.save_test_output:
+                if configs.output_format == 'image':
+                    img_fn = os.path.basename(metadatas['img_path'][0])[:-4]
+                    cv2.imwrite(os.path.join(configs.results_dir, '{}.jpg'.format(img_fn)), out_img)
+                elif configs.output_format == 'video':
+                    if out_cap is None:
+                        out_cap_h, out_cap_w = out_img.shape[:2]
+                        fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+                        out_cap = cv2.VideoWriter(
+                            os.path.join(configs.results_dir, '{}.avi'.format(video_num)),
+                            #os.path.join(configs.results_dir, '{}.avi'.format(configs.output_video_fn)),
+                            fourcc, 30, (out_cap_w, out_cap_h))
 
-            #         out_cap.write(out_img)
-            #     else:
-            #         raise TypeError
+                    out_cap.write(out_img)
+                else:
+                    raise TypeError
 
-            cv2.imshow('test-img', out_img)
-            print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
-            if cv2.waitKey(0) & 0xFF == 27:
+            # cv2.imshow('test-img', out_img)
+            # print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
+            # if cv2.waitKey(0) & 0xFF == 27:
+            #     break
+            
+            # Test da ne pukne spisivanje slika
+            if iteration==max_frames:
                 break
-
-            # print(num_of_all_tracks)
-
     if out_cap:
         out_cap.release()
 

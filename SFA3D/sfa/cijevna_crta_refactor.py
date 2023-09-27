@@ -561,6 +561,7 @@ if __name__ == '__main__':
                     pair_track_object[2] = track_prediction[3]
                     pair_track_object[3:5] = track_object[3:5]
                     pair_track_object[5:8] = track_object[5:8]
+
                     
                     draw_real_to_bev(pair_track_object, bev_map, pair_track_id)
                     draw_connecting_line(bev_map, pair_track_object, pair_detection)
