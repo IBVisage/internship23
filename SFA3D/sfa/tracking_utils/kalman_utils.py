@@ -43,7 +43,7 @@ def predict(f, p, q, x, w, w_mat):
     n = f.shape[0]
     no_sigma_points = 2*n + 1
 
-    eigenvalues = np.linalg.eigvals(p)
+    # eigenvalues = np.linalg.eigvals(p)
     # print("\nEigenvalues (Spectrum) before regularization with 0.2*I:\n")
     # print(eigenvalues)
 

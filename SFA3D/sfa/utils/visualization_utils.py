@@ -160,18 +160,27 @@ def corners_of_boxes(labels, calib):
 
 
 def merge_rgb_to_bev(img_rgb, img_bev, output_width):
+    bev_scaling_factor = 1
+
     img_rgb_h, img_rgb_w = img_rgb.shape[:2]
     ratio_rgb = output_width / img_rgb_w
     output_rgb_h = int(ratio_rgb * img_rgb_h)
     ret_img_rgb = cv2.resize(img_rgb, (output_width, output_rgb_h))
 
     img_bev_h, img_bev_w = img_bev.shape[:2]
-    ratio_bev = output_width / img_bev_w
-    output_bev_h = int(ratio_bev * img_bev_h)
 
-    ret_img_bev = cv2.resize(img_bev, (output_width, output_bev_h))
+    # Resize ret_img_bev by the specified scaling factor
+    ret_img_bev = cv2.resize(img_bev, (int(img_bev_w * bev_scaling_factor), int(img_bev_h * bev_scaling_factor)))
 
-    out_img = np.zeros((output_rgb_h + output_bev_h, output_width, 3), dtype=np.uint8)
+    # Calculate the width of borders needed to make it output_width
+    border_width = (output_width - ret_img_bev.shape[1]) // 2
+
+    # Add borders to ret_img_bev
+    ret_img_bev = cv2.copyMakeBorder(ret_img_bev, top=0, bottom=0, left=border_width, right=border_width,
+                                     borderType=cv2.BORDER_CONSTANT, value=[0, 0, 0])
+
+    out_img = np.zeros((output_rgb_h + ret_img_bev.shape[0], output_width, 3), dtype=np.uint8)
+
     # Upper: RGB --> BEV
     out_img[:output_rgb_h, ...] = ret_img_rgb
     out_img[output_rgb_h:, ...] = ret_img_bev

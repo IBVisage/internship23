@@ -204,7 +204,7 @@ def convert_real_to_bev(detection):
     return class_num, _x, _y, _w, _l, yaw
 
 
-def draw_real_to_bev(detection, bev_img, track_id):
+def draw_real_to_bev(detection, bev_img, track_id, color_id):
     detection_copy = copy(detection)
     # adding skew to y so it is in the middle when it is 0
     # y is on index 2
@@ -212,9 +212,8 @@ def draw_real_to_bev(detection, bev_img, track_id):
     detection_copy[1] = detection_copy[1] - 2
 
     class_num, bev_x, bev_y, bev_w, bev_l, yaw = convert_real_to_bev(detection_copy)
-    class_num = 0
 
-    drawRotatedBox(bev_img, bev_x, bev_y, bev_w, bev_l, yaw, cnf.colors[class_num], track_id)
+    drawRotatedBox(bev_img, bev_x, bev_y, bev_w, bev_l, yaw, cnf.colors[color_id], track_id)
 
 # Drawing a line on to bev between 2 dots
 def draw_connecting_line(bev_img, source, destination):

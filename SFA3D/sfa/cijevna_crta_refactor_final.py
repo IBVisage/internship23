@@ -70,7 +70,7 @@ Q = (sigma_a**2) * np.array([[dt**4/4, dt**3/2, dt**2/2, 0, 0, 0],
                             [0, 0, 0, dt**3/2, dt**2, dt],
                             [0, 0, 0, dt**2/2, dt, 1]])
 
-sigma_r = 4
+sigma_r = 1
 sigma_phi = 0.1
 R = np.array([[sigma_r**2, 0],
               [0, sigma_phi**2]])
@@ -79,12 +79,12 @@ W = np.array([[-1], [1/6], [1/6], [1/6], [1/6], [1/6], [1/6], [1/6], [1/6], [1/6
 W_for_diag = [-1, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6, 1/6]
 W_mat = np.diag(W_for_diag)
 
-P = np.array([[10, 0, 0, 0, 0, 0],
-              [0, 10, 0, 0, 0, 0],
-              [0, 0, 10, 0, 0, 0],
-              [0, 0, 0, 10, 0, 0],
-              [0, 0, 0, 0, 10, 0],
-              [0, 0, 0, 0, 0, 10]])
+P = np.array([[12, 0, 0, 0, 0, 0],
+              [0, 12, 0, 0, 0, 0],
+              [0, 0, 12, 0, 0, 0],
+              [0, 0, 0, 12, 0, 0],
+              [0, 0, 0, 0, 12, 0],
+              [0, 0, 0, 0, 0, 12]])
 
 class Track:
     def __init__(self, identification, initial_state, cov_matrix):
@@ -177,7 +177,7 @@ def parse_test_configs():
                         help='the type of the test output (support image or video)')
     parser.add_argument('--output_video_fn', type=str, default='out_fpn_resnet_18', metavar='PATH',
                         help='the video filename if the output format is video')
-    parser.add_argument('--output-width', type=int, default=608,
+    parser.add_argument('--output-width', type=int, default=1280,
                         help='the width of showing output, the height maybe vary')
 
     configs = edict(vars(parser.parse_args()))
@@ -243,7 +243,6 @@ if __name__ == '__main__':
     ### REFACTORING
     max_frames_lost = 5
 
-
     active_tracks_ref = {}
     num_of_all_tracks = 0
 
@@ -301,11 +300,11 @@ if __name__ == '__main__':
                 hung_threshold = 5
                 hung_ignore = 1
                 # Hungarian auction dodijeljivanje parova
-                used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(kitti_dets_copius), copy(active_tracks_ref),
-                                                                                        metric.k_iou_euc, hung_threshold,
-                                                                                        hung_ignore, iteration)
-                
-
+                used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(kitti_dets_copius),
+                                                                                                copy(active_tracks_ref),
+                                                                                                metric.k_iou_euc,
+                                                                                                hung_threshold,
+                                                                                                hung_ignore, iteration)
 
                 tracks_to_update = []
                 tracks_to_remove = []
@@ -342,7 +341,7 @@ if __name__ == '__main__':
                     track = copy(active_tracks_ref[used_pair[0]])
                     pair_track_id = copy(used_pair[0])
                     pair_detection = copy(used_pair[1])
-                    track_prediction = track.current_prediction
+                    track_prediction = track.current_estimate
                     track_object = track.current_object
 
                     # Konstrukcija objekta
@@ -353,11 +352,11 @@ if __name__ == '__main__':
                     pair_track_object[3:5] = track_object[3:5]
                     pair_track_object[5:8] = track_object[5:8]
                     # Crtanja na sliku i bev                    
-                    draw_real_to_bev(pair_track_object, bev_map, pair_track_id)
+                    draw_real_to_bev(pair_track_object, bev_map, pair_track_id, 8)
                     draw_connecting_line(bev_map, pair_track_object, pair_detection)
 
                     pair_track_object[1:] = lidar_to_camera_box([pair_track_object[1:]], calib.V2C, calib.R0, calib.P2)
-                    img_bgr = draw_box_rgb_prediction(img_bgr, pair_track_object, calib, pair_track_id, 0)
+                    img_bgr = draw_box_rgb_prediction(img_bgr, pair_track_object, calib, pair_track_id, 8)
                     
                 
                 # Crtanje traka koje nemaju povezanu detekciju
@@ -367,11 +366,10 @@ if __name__ == '__main__':
                         
                         draw_track = copy(unused_track.current_object[0:8])
 
-                        draw_real_to_bev(draw_track, bev_map, unused_track.track_id)
+                        draw_real_to_bev(draw_track, bev_map, unused_track.track_id, 9)
 
                         draw_track[1:] = lidar_to_camera_box([draw_track[1:]], calib.V2C, calib.R0, calib.P2)
-                        img_bgr = draw_box_rgb_prediction(img_bgr, draw_track, calib, unused_track.track_id, 0)
-
+                        img_bgr = draw_box_rgb_prediction(img_bgr, draw_track, calib, unused_track.track_id, 9)
 
                 predict_all_active_tracks_ref()
 
@@ -452,6 +450,5 @@ if __name__ == '__main__':
                 break
     if out_cap:
         out_cap.release()
-
 
     cv2.destroyAllWindows()
