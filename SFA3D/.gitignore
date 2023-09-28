@@ -4,4 +4,4 @@ SFA3D_env/
 dataset/
 sfa/trash
 **/__pycache__/
-
+results/
