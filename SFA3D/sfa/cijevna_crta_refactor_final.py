@@ -298,7 +298,7 @@ if __name__ == '__main__':
 
             # Početak rada kalmana
             if iteration >= 1:
-                hung_threshold = 7.5
+                hung_threshold = 5
                 hung_ignore = 1
                 # Hungarian auction dodijeljivanje parova
                 used_track_detection_pairs, unused_tracks, unused_detections = testing_function(copy(kitti_dets_copius), copy(active_tracks_ref),
@@ -442,10 +442,10 @@ if __name__ == '__main__':
                 else:
                     raise TypeError
 
-            # cv2.imshow('test-img', out_img)
-            # print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
-            # if cv2.waitKey(0) & 0xFF == 27:
-            #     break
+            cv2.imshow('test-img', out_img)
+            print('\n[INFO] Press n to see the next sample >>> Press Esc to quit...\n')
+            if cv2.waitKey(0) & 0xFF == 27:
+                break
             
             # Test da ne pukne spisivanje slika
             if iteration==max_frames:
