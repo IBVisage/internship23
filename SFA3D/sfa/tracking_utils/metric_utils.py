@@ -1,7 +1,13 @@
+"""
+# Authors: Ivan Bukač, Ante Ćubela
+# DoC: 2023.10.06.
+-----------------------------------------------------------------------------------
+# Description: Implementation of Unscented Kalman Filter motivated by "Kalman Filter from the Ground Up", by Alex Becker
+"""
+
 import shapely
 import numpy as np
 import config.kitti_config as cnf
-from copy import copy
 
 
 def cosine_distance(vec1, vec2):
@@ -29,11 +35,6 @@ def rotate(angle):
 
 
 def calculate_corners(center_x, center_y, width, length, orientation):
-    # Calculate the coordinates of the four corners
-    # dim: 3
-    # location: 3
-    # ry: 1
-    # return: 8 x 3
     r = rotate(orientation)
     w, l = width, length
     x_corners = [l / 2, l / 2, -l / 2, -l / 2]
@@ -49,11 +50,7 @@ def calculate_corners(center_x, center_y, width, length, orientation):
             (corners_2d[0, 3], corners_2d[1, 3])]
 
 
-
-
-
 def intersection_over_union(object1, object2):
-    # x->1, y->2, 5->w, 6->l, 7->phi
     index = [1, 2, 5, 6, 7]
 
     x1, y1, w1, l1, phi1 = [object1[ii] for ii in index]
@@ -73,8 +70,7 @@ def intersection_over_union(object1, object2):
 
 
 def k_iou_euc(object1, object2, euc_thr):
-    ignore_cost=1
-    # minimisation problem
+    ignore_cost = 1
     w_iou = 3 
     w_euc = 1
 
@@ -82,21 +78,16 @@ def k_iou_euc(object1, object2, euc_thr):
 
     euc = euclidian(object1, object2)
 
-    # Skip if too far away, we know that iou will be small
     if euc > euc_thr:
         return ignore_cost
 
-    ## euclidean normalisation
     n_euc = (euc - 0) / (np.sqrt(cnf.boundary['maxX']**2 + (cnf.boundary['maxY'] - cnf.boundary['minY']-25)**2) - 0)
-
 
     total_weight = w_iou + w_euc
     w_iou /= total_weight
     w_euc /= total_weight
 
-    
     combined_cost = (w_euc * n_euc) + (w_iou * (1 - iou))
-
 
     return combined_cost
 

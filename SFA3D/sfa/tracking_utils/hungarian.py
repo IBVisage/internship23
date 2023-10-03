@@ -1,28 +1,29 @@
-import numpy as np
-import tracking_utils.metric_utils as metric
+"""
+# Authors: Ivan Bukač, Ante Ćubela
+# DoC: 2023.10.06.
+-----------------------------------------------------------------------------------
+# Description:  Implementation of Hungarian-auction algorithm for track association in 2D object tracking problem
+"""
 
+import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 
-
-def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, frame):
+def hungarian_auction(detections, tracks, cost_func, threshold, thresh_ignore, frame):
     best_assignments = []
     unassigned_tracks = []
     unassigned_detections = []
 
     if detections.ndim == 1:
-         detections = np.array([detections])
+        detections = np.array([detections])
 
-    # Postavljanje detekcija i traka tako da se mogu pravilno pratiti 
     row_index_to_track = {i: track for i, track in enumerate(tracks)}
     col_index_to_detection = {i: detection for i, detection in enumerate(detections)}
-
 
     num_detections = len(detections)
     num_tracks = len(tracks)
     cost_matrix = np.zeros((num_tracks, num_detections))
 
-    # IF is used so single detections don't break the loop
     if len(detections[0,:]):
         for track_idx, track in enumerate(tracks):
             for det_idx, detection in enumerate(detections):
@@ -31,38 +32,26 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
 
                 distance_comparison_element[1] = tracks.get(track).current_prediction[0]
                 distance_comparison_element[2] = tracks.get(track).current_prediction[3]
-                
-                # COST FUNCTION SETUP AREA
-                # Ovdje treba postaviti da dobro radi funkcija i matrica troška. ovisi o metrici koja se koristi
+
                 distance = cost_func(detection, distance_comparison_element, threshold)
                 
-                # Ne briši, ako se zove euklidska potrebno ovo dolje i thresh_ignore = 999
+                # Ako se koristi Euklidska udaljenost, potrebno je ovo dolje i thresh_ignore = 999
 
                 # distance = cost_func(detection, distance_comparison_element)
-                
                 # if distance > threshold :
                 #         distance = thresh_ignore
 
                 cost_matrix[track_idx,det_idx] = distance
 
-        
-        # U slučaju da je cost tima "veće je bolje" potrebno je obrnuti vrijednosti da se mogu pravilno minimizirati
         min_better = False
         if min_better:
-            cost_matrix = cost_matrix * -1 + 1
+            cost_matrix = cost_matrix * (-1) + 1
 
-        
-        # Use the Hungarian algorithm to find the best assignments
         row_indices, col_indices = linear_sum_assignment(cost_matrix)
 
-        # Map the indices back to the specific detections and tracks
-        # thresh_ignore služi da se mogu izolirati trake i detekcija koje ne bi trebale biti zajendo. Npr, ako se koristi euklidska
-        # udaljenost, stavi se na 999 kako bi se istaknulo kako je to par koji se filtrira/zanemarije.
         best_assignments = [(row_index_to_track[row_idx], col_index_to_detection[col_idx]) for 
                             row_idx, col_idx in zip(row_indices, col_indices) if not int(cost_matrix[row_idx, col_idx]) == thresh_ignore]
-   
-    # Initialize lists to store tracks and detections that haven't been assigned
-    
+
     for track in tracks:
         assigned = False
         for pair in best_assignments:
@@ -72,7 +61,6 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
         if not assigned:
             unassigned_tracks.append(track)
 
-
     for detection in detections:
         assigned = False
         for pair in best_assignments:
@@ -81,7 +69,6 @@ def testing_function(detections, tracks, cost_func, threshold, thresh_ignore, fr
                 break
         if not assigned:
             unassigned_detections.append(detection)
-    
 
     return best_assignments, unassigned_tracks, unassigned_detections
 

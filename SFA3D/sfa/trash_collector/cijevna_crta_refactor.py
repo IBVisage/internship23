@@ -447,6 +447,8 @@ if __name__ == '__main__':
                     active_track.current_estimate = x_estimate
                     active_track.covariance_matrix_estimate = p_estimate
 
+                    print(f"Zadnji estimate je : {x_estimate}")
+
         return None
 
 

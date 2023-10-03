@@ -1,5 +1,4 @@
 import math
-
 import numpy as np
 
 # Car and Van ==> Car class
